@@ -55,7 +55,7 @@ textarea:focus-visible, .chip:focus-visible { outline: 2px solid var(--accent); 
 
 .seg { display: grid; grid-template-columns: repeat(4, 1fr); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--surface); }
 .seg input { position: absolute; opacity: 0; pointer-events: none; }
-.seg label { padding: 10px 6px; text-align: center; font-size: 14px; cursor: pointer; color: var(--fg); transition: background .15s, color .15s; }
+.seg label { padding: 10px 6px; text-align: center; font-size: 14px; cursor: pointer; color: var(--fg); transition: background-color var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out), transform var(--dur-fast) var(--ease-out); }
 .seg label + input + label { border-left: 1px solid var(--line); }
 .seg input:checked + label { background: var(--accent); color: var(--accent-fg); }
 .seg input:focus-visible + label { outline: 2px solid var(--accent); outline-offset: -4px; }

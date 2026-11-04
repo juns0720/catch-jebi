@@ -98,8 +98,8 @@ export function createHud(root: HTMLElement, o: HudOpts): Hud {
       lost = false;
       setDanger(false);
       timeEl.textContent = '0.0';
-      barFill.style.width = '100%';
-      if (ghostFill) ghostFill.style.width = '0%';
+      barFill.style.transform = 'scaleX(1)';
+      if (ghostFill) ghostFill.style.transform = 'scaleX(0)';
       ghostBox?.classList.remove('lost');
       blankEl.textContent = '0';
       missEl.textContent = '0';
@@ -108,10 +108,10 @@ export function createHud(root: HTMLElement, o: HudOpts): Hud {
     },
     tick(elapsedMs, remainingMs) {
       timeEl.textContent = fmtSec(Math.min(elapsedMs, par));
-      barFill.style.width = `${clamp01(remainingMs / par) * 100}%`;
+      barFill.style.transform = `scaleX(${clamp01(remainingMs / par).toFixed(4)})`;
       setDanger(remainingMs <= DANGER_MS);
       if (g && ghostFill) {
-        ghostFill.style.width = `${clamp01(elapsedMs / par) * 100}%`;
+        ghostFill.style.transform = `scaleX(${clamp01(elapsedMs / par).toFixed(4)})`;
         if (!lost && elapsedMs > g.ms) {
           lost = true;
           ghostBox?.classList.add('lost');

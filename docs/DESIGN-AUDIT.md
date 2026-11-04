@@ -132,6 +132,8 @@ Hallmark 6축 자기평가(1~5): Philosophy 4 · Hierarchy 3 · Execution 3 · S
 
 ## 6. 우선순위 수정 목록
 
+1~6번은 2026-11-05에 적용했다: `/api/og?site=1` 랜딩 카드, "뒤에서 N%" 분기, `--ease-out`·`--dur-*` 토큰과 전 pressable `:active scale(.97)`, 타이머 바 `scaleX`, 세 페이지 `theme-color`, 종이 위 붉은색 `--seal-ink`(다크 #b8362b). 토스트 진입/퇴장 비대칭과 쪽지 도장 타이밍(0.75s)도 함께.
+
 | # | 수정 | 근거 | 예상 |
 | --- | --- | --- | --- |
 | 1 | `og-default.png` 404 해결 (api/og 기본 카드 또는 PNG) | §2 바이럴 핵심 경로 | 30분 |

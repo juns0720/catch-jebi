@@ -3,7 +3,7 @@ import type { Bird, World } from '@/game/birds';
 import { wireWobble } from '@/game/birds';
 
 export type Colors = Record<string, string>;
-const TOK = ['sky-top', 'sky-bot', 'cloud', 'wire', 'pole', 'hill', 'hill2', 'bird', 'belly', 'orb', 'star', 'seal', 'paper', 'paper-ink', 'fg', 'muted', 'gold', 'poop'];
+const TOK = ['sky-top', 'sky-bot', 'cloud', 'wire', 'pole', 'hill', 'hill2', 'bird', 'belly', 'orb', 'star', 'seal', 'seal-ink', 'paper', 'paper-ink', 'fg', 'muted', 'gold', 'poop'];
 
 function parseColor(s: string): [number, number, number, number] | null {
   const h = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(s);
@@ -50,7 +50,7 @@ function drawSlip(ctx: Ctx, x: number, y: number, rot: number, s: number, color:
   ctx.fillStyle = color; ctx.fillRect(-pw / 2, -ph / 2, pw, ph);
   ctx.strokeStyle = 'rgba(70,50,20,.35)'; ctx.lineWidth = 0.8; ctx.strokeRect(-pw / 2, -ph / 2, pw, ph);
   if (open) {
-    ctx.fillStyle = C.seal; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = C["seal-ink"]; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.font = `${Math.round(9 * s)}px ${C.display}`; ctx.fillText('꽝', 0, 0.5 * s);
     ctx.textBaseline = 'alphabetic';
   } else {
@@ -136,7 +136,7 @@ function drawReveal(ctx: Ctx, w: World, C: Colors, now: number) {
   ctx.strokeStyle = 'rgba(70,50,20,.12)'; ctx.lineWidth = 1;
   for (const y of [-ph / 6, ph / 6]) { ctx.beginPath(); ctx.moveTo(-pw / 2, y); ctx.lineTo(pw / 2, y); ctx.stroke(); }
   ctx.strokeStyle = 'rgba(70,50,20,.4)'; ctx.strokeRect(-pw / 2, -ph / 2, pw, ph);
-  ctx.fillStyle = C.seal; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillStyle = C["seal-ink"]; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   ctx.font = `${Math.round(46 * w.S)}px ${C.display}`; ctx.fillText('꽝', 0, 3 * w.S);
   ctx.restore(); ctx.textBaseline = 'alphabetic';
 }

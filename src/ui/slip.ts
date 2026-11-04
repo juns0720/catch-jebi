@@ -127,7 +127,8 @@ export function showResultSlip(root: HTMLElement, o: SlipOpts): SlipHandle {
   const setPercentile = (p: number | null) => {
     if (p == null || !r.cleared) { pctEl.textContent = ''; return; }
     const top = Math.min(100, Math.max(1, Math.ceil(100 - p)));
-    pctEl.textContent = `상위 ${top}%`;
+    // 절반 밖이면 "상위 100%" 같은 말이 되므로 뒤에서 센다
+    pctEl.textContent = top <= 50 ? `상위 ${top}%` : `뒤에서 ${Math.max(1, 101 - top)}%`;
   };
 
   let ghostEl: HTMLElement | null = null;

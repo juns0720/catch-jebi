@@ -94,8 +94,9 @@ a.btn { text-decoration: none; display: inline-block; }
 .hud-time { display: inline-block; min-width: 3.6ch; text-align: right; font-family: var(--font-display); font-size: 44px; line-height: 1; font-variant-numeric: tabular-nums; }
 .hud-par { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
 .hud-bar { position: relative; height: 8px; border-radius: 999px; overflow: hidden; background: color-mix(in srgb, var(--fg) 14%, transparent); }
-.hud-bar i { display: block; height: 100%; width: 100%; border-radius: inherit; background: var(--accent); transition: width .1s linear; }
-.hud-bar.ghost i { width: 0; background: var(--gold); }
+/* 채움은 width 가 아니라 scaleX 로 (매 틱 layout 대신 compositor) */
+.hud-bar i { display: block; height: 100%; width: 100%; border-radius: inherit; background: var(--accent); transform-origin: left center; transition: transform .1s linear; }
+.hud-bar.ghost i { transform: scaleX(0); background: var(--gold); }
 .hud-marker { position: absolute; top: 0; bottom: 0; width: 3px; margin-left: -1px; background: var(--fg); }
 .hud-ghost { display: grid; gap: 4px; }
 .hud-ghost-label { font-size: 12px; color: var(--muted); }
@@ -173,8 +174,9 @@ a.btn { text-decoration: none; display: inline-block; }
 }
 
 /* ---------- 토스트 ---------- */
-.toast { position: fixed; left: 50%; bottom: 28px; z-index: 90; transform: translate(-50%, 12px); opacity: 0; pointer-events: none; padding: 10px 16px; border-radius: 999px; background: var(--fg); color: var(--bg); font-size: 14px; transition: opacity .2s, transform .2s; }
-.toast.show { opacity: 1; transform: translate(-50%, 0); }
+/* 퇴장(140ms)은 진입(220ms)보다 빠르게 */
+.toast { position: fixed; left: 50%; bottom: 28px; z-index: 90; transform: translate(-50%, 8px); opacity: 0; pointer-events: none; padding: 10px 16px; border-radius: 999px; background: var(--fg); color: var(--bg); font-size: 14px; transition: opacity 140ms var(--ease-in-out), transform 140ms var(--ease-in-out); }
+.toast.show { opacity: 1; transform: translate(-50%, 0); transition: opacity var(--dur-base) var(--ease-out), transform var(--dur-base) var(--ease-out); }
 
 @media (prefers-reduced-motion: reduce) {
   .hud-timer.danger .hud-time, .hud-pop.show, .ending, .ending-big, .ending-sub { animation: none; }
