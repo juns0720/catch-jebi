@@ -1,0 +1,59 @@
+/* 디자인 토큰. 원본 아티팩트에서 가져옴. 모든 페이지가 이 파일을 쓴다. */
+:root {
+  --bg: #e9eee8; --surface: #f8f8f3; --fg: #1b2230; --muted: #5b6876; --line: #cdd5d6;
+  --accent: #1e3352; --accent-fg: #f6f2e8; --seal: #c0392b;
+  --paper: #f3ead3; --paper-ink: #2b2317; --veil: rgba(20, 28, 40, .45);
+  --sky-top: #a8cbe0; --sky-bot: #eaf0e2; --cloud: rgba(255, 255, 255, .82);
+  --wire: rgba(40, 52, 68, .55); --pole: #6d6a62; --hill: #a9c194; --hill2: #c3d3b0;
+  --bird: #1a2335; --belly: #efe8d8; --orb: #fff3cf; --star: rgba(255, 255, 255, 0);
+  --gold: #d4a63a; --poop: rgba(96, 82, 52, .78); --danger: #c0392b;
+  --font-display: "Song Myung", "Noto Serif KR", "Nanum Myeongjo", serif;
+  --font-body: "Gowun Dodum", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e141d; --surface: #151e2a; --fg: #e5e9ee; --muted: #93a0ae; --line: #283445;
+    --accent: #a9c6e8; --accent-fg: #0e141d; --seal: #e2584b;
+    --paper: #ece2c8; --paper-ink: #2b2317; --veil: rgba(0, 0, 0, .6);
+    --sky-top: #0a1424; --sky-bot: #22324a; --cloud: rgba(170, 190, 220, .13);
+    --wire: rgba(170, 185, 205, .5); --pole: #2f3a4a; --hill: #142033; --hill2: #1b2a40;
+    --bird: #04070d; --belly: #bdb5a6; --orb: #efe7cc; --star: rgba(232, 238, 248, .75);
+    --gold: #e6c05a; --poop: rgba(70, 58, 36, .85); --danger: #e2584b;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e141d; --surface: #151e2a; --fg: #e5e9ee; --muted: #93a0ae; --line: #283445;
+  --accent: #a9c6e8; --accent-fg: #0e141d; --seal: #e2584b;
+  --paper: #ece2c8; --paper-ink: #2b2317; --veil: rgba(0, 0, 0, .6);
+  --sky-top: #0a1424; --sky-bot: #22324a; --cloud: rgba(170, 190, 220, .13);
+  --wire: rgba(170, 185, 205, .5); --pole: #2f3a4a; --hill: #142033; --hill2: #1b2a40;
+  --bird: #04070d; --belly: #bdb5a6; --orb: #efe7cc; --star: rgba(232, 238, 248, .75);
+  --gold: #e6c05a; --poop: rgba(70, 58, 36, .85); --danger: #e2584b;
+  color-scheme: dark;
+}
+*, *::before, *::after { box-sizing: border-box; }
+html { height: 100%; }
+body { margin: 0; min-height: 100%; background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 15px; }
+.btn { font: inherit; cursor: pointer; border-radius: 12px; }
+.btn.primary { background: var(--accent); color: var(--accent-fg); border: 0; padding: 14px 16px; font-size: 16px; transition: transform .12s; }
+.btn.primary:active { transform: scale(.98); }
+.btn.ghost { background: var(--surface); color: var(--fg); border: 1px solid var(--line); border-radius: 999px; padding: 8px 14px; font-size: 14px; }
+.btn.ghost:hover { border-color: var(--accent); }
+.btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.slip {
+  position: relative; min-height: 180px; display: grid; place-items: center; padding: 30px 24px; border-radius: 3px;
+  background-color: var(--paper); color: var(--paper-ink);
+  background-image: linear-gradient(to bottom, transparent 32.8%, rgba(70, 50, 20, .09) 33.3%, transparent 34%, transparent 65.8%, rgba(70, 50, 20, .09) 66.3%, transparent 67%);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, .18);
+}
+.stamp {
+  font-family: var(--font-display); font-size: 20px; color: var(--seal);
+  border: 3px solid var(--seal); border-radius: 6px; padding: 2px 8px; transform: rotate(-12deg); opacity: .92; display: inline-block;
+}
+.slip.open { animation: unfold .55s cubic-bezier(.2, .8, .2, 1) both; }
+.slip.open .stamp { animation: stampIn .35s .55s cubic-bezier(.3, 1.6, .5, 1) both; }
+@keyframes unfold { 0% { transform: scale(.25, .06) rotate(-4deg); opacity: 0; } 40% { transform: scale(.6, .14); opacity: 1; } 100% { transform: none; } }
+@keyframes stampIn { from { transform: rotate(-12deg) scale(1.8); opacity: 0; } to { transform: rotate(-12deg) scale(1); opacity: .92; } }
+@media (prefers-reduced-motion: reduce) { .slip.open, .slip.open .stamp { animation: none; } }

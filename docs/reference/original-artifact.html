@@ -1,0 +1,636 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>살아있는 제비뽑기</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Song+Myung&display=swap" rel="stylesheet">
+<style>
+/* Layout: 하늘(캔버스)이 주인공, 오른쪽(모바일은 아래) 패널에 쪽지 설정과 뽑은 결과 */
+:root {
+  --bg: #e9eee8; --surface: #f8f8f3; --fg: #1b2230; --muted: #5b6876; --line: #cdd5d6;
+  --accent: #1e3352; --accent-fg: #f6f2e8; --seal: #c0392b;
+  --paper: #f3ead3; --paper-ink: #2b2317; --veil: rgba(20, 28, 40, .45);
+  --sky-top: #a8cbe0; --sky-bot: #eaf0e2; --cloud: rgba(255, 255, 255, .82);
+  --wire: rgba(40, 52, 68, .55); --pole: #6d6a62; --hill: #a9c194; --hill2: #c3d3b0;
+  --bird: #1a2335; --belly: #efe8d8; --orb: #fff3cf; --star: rgba(255, 255, 255, 0);
+  --font-display: "Song Myung", "Noto Serif KR", "Nanum Myeongjo", serif;
+  --font-body: "Gowun Dodum", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e141d; --surface: #151e2a; --fg: #e5e9ee; --muted: #93a0ae; --line: #283445;
+    --accent: #a9c6e8; --accent-fg: #0e141d; --seal: #e2584b;
+    --paper: #ece2c8; --paper-ink: #2b2317; --veil: rgba(0, 0, 0, .6);
+    --sky-top: #0a1424; --sky-bot: #22324a; --cloud: rgba(170, 190, 220, .13);
+    --wire: rgba(170, 185, 205, .5); --pole: #2f3a4a; --hill: #142033; --hill2: #1b2a40;
+    --bird: #04070d; --belly: #bdb5a6; --orb: #efe7cc; --star: rgba(232, 238, 248, .75);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e141d; --surface: #151e2a; --fg: #e5e9ee; --muted: #93a0ae; --line: #283445;
+  --accent: #a9c6e8; --accent-fg: #0e141d; --seal: #e2584b;
+  --paper: #ece2c8; --paper-ink: #2b2317; --veil: rgba(0, 0, 0, .6);
+  --sky-top: #0a1424; --sky-bot: #22324a; --cloud: rgba(170, 190, 220, .13);
+  --wire: rgba(170, 185, 205, .5); --pole: #2f3a4a; --hill: #142033; --hill2: #1b2a40;
+  --bird: #04070d; --belly: #bdb5a6; --orb: #efe7cc; --star: rgba(232, 238, 248, .75);
+  color-scheme: dark;
+}
+
+html { height: 100%; box-sizing: border-box; }
+body { height: 100%; background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 15px; margin: 0; }
+*, *::before, *::after { box-sizing: border-box; }
+
+.app {
+  height: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 16px;
+  padding-block: 16px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+
+.stage {
+  position: relative; min-height: 0; border-radius: 18px; overflow: hidden;
+  background: var(--sky-bot); border: 1px solid var(--line);
+}
+.stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: crosshair; }
+.stage-head {
+  position: absolute; inset: 0 0 auto; display: flex; flex-wrap: wrap; gap: 12px;
+  justify-content: space-between; align-items: flex-start; padding: 18px 20px; pointer-events: none;
+}
+.stage-head h1 {
+  margin: 0; font-family: var(--font-display); font-weight: 400; line-height: 1.15;
+  font-size: clamp(24px, 3.2vw, 36px); text-wrap: balance; letter-spacing: -.01em;
+}
+.stage-head p { margin: 4px 0 0; color: var(--muted); font-size: 14px; font-variant-numeric: tabular-nums; }
+.stage-head .btn { pointer-events: auto; }
+
+.panel { min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 22px; padding-block: 4px 8px; }
+.lede { margin: 0; color: var(--muted); line-height: 1.75; max-width: 65ch; }
+.group { display: grid; gap: 8px; }
+.label { font-size: 13px; letter-spacing: .04em; color: var(--fg); }
+.help { margin: 0; font-size: 13px; color: var(--muted); line-height: 1.6; }
+.row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.num { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 13px; }
+
+textarea {
+  width: 100%; resize: vertical; min-height: 150px; font: inherit; line-height: 1.65; color: var(--fg);
+  background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px;
+}
+textarea:focus-visible, .btn:focus-visible, .chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip {
+  font: inherit; font-size: 13px; color: var(--fg); background: var(--surface);
+  border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; cursor: pointer;
+}
+.chip:hover { border-color: var(--accent); }
+
+.seg { display: grid; grid-template-columns: repeat(4, 1fr); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--surface); }
+.seg input { position: absolute; opacity: 0; pointer-events: none; }
+.seg label { padding: 10px 6px; text-align: center; font-size: 14px; cursor: pointer; color: var(--fg); transition: background .15s, color .15s; }
+.seg label + input + label { border-left: 1px solid var(--line); }
+.seg input:checked + label { background: var(--accent); color: var(--accent-fg); }
+.seg input:focus-visible + label { outline: 2px solid var(--accent); outline-offset: -4px; }
+
+.btn { font: inherit; cursor: pointer; border-radius: 12px; }
+.btn.primary { background: var(--accent); color: var(--accent-fg); border: 0; padding: 14px 16px; font-size: 16px; width: 100%; transition: transform .12s; }
+.btn.primary:active { transform: scale(.98); }
+.btn.ghost { background: var(--surface); color: var(--fg); border: 1px solid var(--line); border-radius: 999px; padding: 8px 14px; font-size: 14px; }
+.btn.ghost:hover { border-color: var(--accent); }
+
+.results { list-style: none; margin: 0; padding: 0; }
+.results li { display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 8px; padding: 9px 0; border-bottom: 1px solid var(--line); align-items: baseline; }
+.results li.empty { display: block; color: var(--muted); font-size: 14px; border-bottom: 0; line-height: 1.6; }
+.results .n { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 13px; }
+.results .t { font-family: var(--font-display); font-size: 18px; overflow-wrap: anywhere; }
+.results li.win .t { color: var(--seal); }
+
+.veil {
+  position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; background: var(--veil);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.sheet { width: min(420px, 100%); background: var(--surface); color: var(--fg); border-radius: 18px; padding: 22px; display: grid; gap: 18px; text-align: center; border: 1px solid var(--line); }
+.order { margin: 0; color: var(--muted); font-size: 14px; font-variant-numeric: tabular-nums; }
+.slip {
+  position: relative; min-height: 180px; display: grid; place-items: center; padding: 30px 24px; border-radius: 3px;
+  background-color: var(--paper); color: var(--paper-ink);
+  background-image: linear-gradient(to bottom, transparent 32.8%, rgba(70, 50, 20, .09) 33.3%, transparent 34%, transparent 65.8%, rgba(70, 50, 20, .09) 66.3%, transparent 67%);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, .18);
+}
+.slip-text { font-family: var(--font-display); font-size: clamp(30px, 8vw, 48px); line-height: 1.25; overflow-wrap: anywhere; text-wrap: balance; }
+.stamp {
+  position: absolute; right: 18px; bottom: 16px; font-family: var(--font-display); font-size: 20px; color: var(--seal);
+  border: 3px solid var(--seal); border-radius: 6px; padding: 2px 8px; transform: rotate(-12deg); opacity: .92;
+}
+.slip.open { animation: unfold .55s cubic-bezier(.2, .8, .2, 1) both; }
+.slip.open .stamp { animation: stampIn .35s .55s cubic-bezier(.3, 1.6, .5, 1) both; }
+@keyframes unfold { 0% { transform: scale(.25, .06) rotate(-4deg); opacity: 0; } 40% { transform: scale(.6, .14); opacity: 1; } 100% { transform: none; } }
+@keyframes stampIn { from { transform: rotate(-12deg) scale(1.8); opacity: 0; } to { transform: rotate(-12deg) scale(1); opacity: .92; } }
+
+@media (max-width: 860px) {
+  html, body { height: auto; }
+  .app { height: auto; grid-template-columns: minmax(0, 1fr); }
+  .stage { height: 64vh; min-height: 380px; }
+  .panel { overflow: visible; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .slip.open, .slip.open .stamp { animation: none; }
+}
+</style>
+</head>
+<body>
+<main class="app">
+  <section class="stage" id="stage" aria-label="제비들이 날아다니는 하늘">
+    <canvas id="sky" role="img" aria-label="쪽지를 문 제비들이 날아다니는 하늘. 제비를 누르면 잡혀요."></canvas>
+    <div class="stage-head">
+      <div>
+        <h1>살아있는 제비뽑기</h1>
+        <p id="flyCount" aria-live="polite">날고 있는 제비 6마리</p>
+      </div>
+      <button class="btn ghost" id="grab" type="button">눈 감고 한 마리 잡기</button>
+    </div>
+  </section>
+
+  <aside class="panel">
+    <p class="lede">강남 갔던 제비들이 쪽지를 하나씩 물고 돌아왔어요. 날아다니는 제비를 눌러 잡으면 물고 있던 쪽지를 펼쳐 볼 수 있어요.</p>
+
+    <div class="group">
+      <label class="label" for="items">쪽지 내용</label>
+      <p class="help">한 줄에 쪽지 하나씩 적어요. 제비 한 마리가 쪽지 하나를 물고 날아가요.</p>
+      <textarea id="items" spellcheck="false">당첨
+꽝
+꽝
+꽝
+꽝
+꽝</textarea>
+      <p class="help" id="itemsNote">제비 6마리</p>
+      <div class="chips" aria-label="빠른 채우기">
+        <button class="chip" type="button" data-preset="win">당첨 1 · 꽝 5</button>
+        <button class="chip" type="button" data-preset="order">순서 정하기</button>
+        <button class="chip" type="button" data-preset="chores">오늘의 당번</button>
+        <button class="chip" type="button" data-preset="lunch">점심 메뉴</button>
+      </div>
+    </div>
+
+    <div class="group">
+      <span class="label" id="modeLabel">제비 성격</span>
+      <div class="seg" role="radiogroup" aria-labelledby="modeLabel">
+        <input type="radio" name="mode" id="m-calm" value="calm"><label for="m-calm">순둥이</label>
+        <input type="radio" name="mode" id="m-normal" value="normal"><label for="m-normal">보통</label>
+        <input type="radio" name="mode" id="m-fast" value="fast"><label for="m-fast">날쌘돌이</label>
+        <input type="radio" name="mode" id="m-hard" value="hard" checked><label for="m-hard">하드코어</label>
+      </div>
+      <p class="help" id="modeHint"></p>
+    </div>
+
+    <button class="btn primary" id="release" type="button">제비 날려 보내기</button>
+
+    <div class="group">
+      <div class="row"><span class="label">뽑은 쪽지</span><span class="num" id="caughtCount">0 / 6</span></div>
+      <ol class="results" id="results"></ol>
+    </div>
+  </aside>
+</main>
+
+<div class="veil" id="veil" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="slipOrder" aria-describedby="slipText">
+    <p class="order" id="slipOrder">1번째로 잡은 제비</p>
+    <div class="slip" id="slip">
+      <span class="slip-text" id="slipText"></span>
+      <span class="stamp" id="stamp" hidden>당첨</span>
+    </div>
+    <button class="btn primary" id="closeSlip" type="button">다음 제비 잡으러 가기</button>
+  </div>
+</div>
+
+<script>
+(() => {
+  const $ = s => document.querySelector(s);
+  const canvas = $('#sky'), ctx = canvas.getContext('2d'), stage = $('#stage');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const MODES = {
+    calm:   { cruise: 55,  max: 120, fleeR: 60,  flee: 260,  hitR: 26, slip: true,  dodge: 0,    escape: 0,    predict: 0,    blind: 1,   hint: '느긋하게 날아다니고 거의 도망가지 않아요.' },
+    normal: { cruise: 90,  max: 300, fleeR: 130, flee: 1400, hitR: 20, slip: true,  dodge: 0.1,  escape: 0,    predict: 0,    blind: 1,   hint: '손이 다가가면 슬쩍 피해요.' },
+    fast:   { cruise: 130, max: 480, fleeR: 180, flee: 3000, hitR: 16, slip: false, dodge: 0.3,  escape: 0.1,  predict: 0.1,  blind: 0.6, hint: '가까이 가면 휙 달아나요. 구석으로 몰아서 잡아 보세요.' },
+    hard:   { cruise: 175, max: 720, fleeR: 240, flee: 6500, hitR: 12, slip: false, dodge: 0.5,  escape: 0.3,  predict: 0.22, blind: 0.15, hint: '손이 어디로 갈지 미리 읽고 피해요. 잡혀도 버둥거리다 빠져나가고, 남은 제비가 적을수록 더 예민해져요. 쪽지는 잡아도 안 돼요. 몸통을 노리세요.' }
+  };
+  const PRESETS = {
+    win: '당첨\n꽝\n꽝\n꽝\n꽝\n꽝',
+    order: '1번\n2번\n3번\n4번\n5번\n6번',
+    chores: '설거지\n청소기 돌리기\n분리수거\n빨래 개기\n쉬는 날',
+    lunch: '김치찌개\n제육볶음\n냉면\n돈가스\n순댓국\n비빔밥'
+  };
+  const MAX_BIRDS = 30;
+  const TOK = ['sky-top','sky-bot','cloud','wire','pole','hill','hill2','bird','belly','orb','star','seal','paper','fg','muted'];
+  const C = {};
+  const store = {
+    get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+    set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+  };
+
+  let W = 1, H = 1, DPR = 1, S = 1;
+  let birds = [], feathers = [], ripples = [], clouds = [], stars = [], caught = [];
+  let total = 0, mode = 'hard', modalOpen = false, lastFocus = null, misses = 0, popups = [];
+  const ptr = { x: -999, y: -999, vx: 0, vy: 0, t: 0, hover: false, until: 0 };
+
+  function readTokens() {
+    const cs = getComputedStyle(document.documentElement);
+    TOK.forEach(t => { C[t] = cs.getPropertyValue('--' + t).trim(); });
+  }
+  readTokens();
+  matchMedia('(prefers-color-scheme: dark)').addEventListener('change', readTokens);
+  new MutationObserver(readTokens).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+  function rnd() {
+    try { const a = new Uint32Array(1); crypto.getRandomValues(a); return a[0] / 4294967296; }
+    catch (e) { return Math.random(); }
+  }
+  function rawItems() { return $('#items').value.split('\n').map(s => s.trim()).filter(Boolean); }
+  function parseItems() { return rawItems().slice(0, MAX_BIRDS); }
+  const isWin = t => /당첨|1등|합격|축하/.test(t);
+
+  function resize() {
+    const r = stage.getBoundingClientRect();
+    const oldW = W, oldH = H;
+    DPR = Math.min(2, window.devicePixelRatio || 1);
+    W = Math.max(1, r.width); H = Math.max(1, r.height);
+    canvas.width = Math.round(W * DPR); canvas.height = Math.round(H * DPR);
+    S = Math.max(0.85, Math.min(1.25, W / 820));
+    if (!clouds.length) {
+      for (let i = 0; i < 5; i++) clouds.push({ x: Math.random() * W, y: H * (0.1 + Math.random() * 0.45), s: 0.6 + Math.random() * 0.9, v: 6 + Math.random() * 10 });
+      for (let i = 0; i < 60; i++) stars.push({ x: Math.random(), y: Math.random() * 0.6, r: Math.random() * 1.2 + 0.3 });
+    } else if (oldW > 1) {
+      birds.forEach(b => { b.x *= W / oldW; b.y *= H / oldH; });
+      clouds.forEach(c => { c.y *= H / oldH; });
+    }
+  }
+  resize();
+  new ResizeObserver(resize).observe(stage);
+
+  function release(fromEdges) {
+    let items = parseItems();
+    if (!items.length) { $('#items').value = PRESETS.win; items = parseItems(); updateNote(); }
+    const arr = items.slice();
+    for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; }
+    total = arr.length; caught = []; feathers = []; ripples = []; popups = []; misses = 0;
+    const m = MODES[mode];
+    birds = arr.map((item, i) => {
+      const left = i % 2 === 0;
+      const ang = Math.random() * Math.PI * 2;
+      return {
+        item,
+        x: fromEdges ? (left ? -30 : W + 30) : W * (0.1 + Math.random() * 0.8),
+        y: H * (0.2 + 0.5 * Math.random()),
+        vx: fromEdges ? (left ? 1 : -1) * m.cruise * 1.4 : Math.cos(ang) * m.cruise,
+        vy: fromEdges ? (Math.random() - 0.5) * 40 : Math.sin(ang) * m.cruise * 0.5,
+        phase: Math.random() * 6.28, turn: 0, seed: Math.random() * 10,
+        delay: fromEdges ? i * 0.18 : 0, state: 'fly', excite: 0,
+        scale: total > 16 ? 0.82 : 1, slipX: null, slipY: null
+      };
+    });
+    renderList(); updateCount();
+    store.set('jebi-items', $('#items').value);
+  }
+
+  function flying() { return birds.filter(b => b.state === 'fly'); }
+
+  function updateCount() {
+    const n = flying().length;
+    $('#flyCount').textContent = (n ? `날고 있는 제비 ${n}마리` : '모든 제비를 잡았어요') + ` · 헛손질 ${misses}번`;
+    $('#caughtCount').textContent = `${caught.length} / ${total}`;
+  }
+  function updateNote() {
+    const n = rawItems().length;
+    $('#itemsNote').textContent = n === 0 ? '쪽지가 비어 있어요. 비워 두면 당첨 1 · 꽝 5로 날아가요.'
+      : n > MAX_BIRDS ? `제비 ${n}마리 중 앞의 ${MAX_BIRDS}마리만 날아가요.` : `제비 ${n}마리`;
+  }
+  function renderList() {
+    const ol = $('#results'); ol.textContent = '';
+    if (!caught.length) {
+      const li = document.createElement('li'); li.className = 'empty';
+      li.textContent = '아직 잡은 제비가 없어요. 하늘에서 한 마리 잡아 보세요.';
+      ol.append(li);
+    }
+    caught.forEach((t, i) => {
+      const li = document.createElement('li'); if (isWin(t)) li.className = 'win';
+      const n = document.createElement('span'); n.className = 'n'; n.textContent = String(i + 1);
+      const s = document.createElement('span'); s.className = 't'; s.textContent = t;
+      li.append(n, s); ol.append(li);
+    });
+  }
+
+  function catchBird(b) {
+    modalOpen = true;
+    b.state = 'leaving';
+    b.vx = (b.x < W / 2 ? -1 : 1) * (160 + Math.random() * 80); b.vy = -200;
+    for (let i = 0; i < 6; i++) feathers.push({ x: b.x, y: b.y, vx: (Math.random() - 0.5) * 140, vy: -Math.random() * 90, rot: Math.random() * 6, vr: (Math.random() - 0.5) * 6, life: 1.6 + Math.random() });
+    ripples.push({ x: b.x, y: b.y, life: 0.5, seal: true });
+    caught.push(b.item); renderList(); updateCount();
+    setTimeout(() => openSlip(b.item, caught.length), reduce ? 0 : 320);
+  }
+
+  function openSlip(item, n) {
+    lastFocus = document.activeElement;
+    $('#slipOrder').textContent = `${n}번째로 잡은 제비`;
+    $('#slipText').textContent = item;
+    $('#stamp').hidden = !isWin(item);
+    $('#closeSlip').textContent = flying().length ? '다음 제비 잡으러 가기' : '닫기';
+    $('#veil').hidden = false;
+    const slip = $('#slip'); slip.classList.remove('open'); void slip.offsetWidth; slip.classList.add('open');
+    $('#closeSlip').focus();
+  }
+  function closeSlip() {
+    $('#veil').hidden = true; modalOpen = false;
+    if (lastFocus && lastFocus.focus && lastFocus !== document.body) lastFocus.focus();
+  }
+
+  function hitTest(x, y, touch) {
+    const m = MODES[mode];
+    let best = null, bd = Infinity;
+    for (const b of birds) {
+      if (b.state !== 'fly' || b.delay > 0) continue;
+      const r = (m.hitR * S + (touch ? 10 : 0)) * b.scale;
+      let d = Math.hypot(b.x - x, b.y - y);
+      if (m.slip && b.slipX != null) d = Math.min(d, Math.hypot(b.slipX - x, b.slipY - y));
+      if (d < r && d < bd) { bd = d; best = b; }
+    }
+    return best;
+  }
+
+  // 남은 제비가 적을수록 예민해짐 (1 ~ 2배)
+  function nerves() {
+    if (mode !== 'hard' && mode !== 'fast') return 1;
+    const n = flying().length;
+    return total > 1 ? 1 + (1 - (n - 1) / (total - 1)) : 2;
+  }
+  function popup(x, y, text) { popups.push({ x, y, text, life: 0.9 }); }
+  function dash(b, fx, fy, power) {
+    const m = MODES[mode];
+    let dx = b.x - fx, dy = b.y - fy, d = Math.hypot(dx, dy);
+    if (d < 0.01) { dx = Math.random() - 0.5; dy = -1; d = Math.hypot(dx, dy); }
+    const v = m.max * S * power;
+    b.vx = dx / d * v; b.vy = dy / d * v; b.excite = 1; b.turn = (Math.random() - 0.5) * 3;
+  }
+  function scatter(x, y, radius) {
+    for (const o of birds) {
+      if (o.state !== 'fly' || o.delay > 0) continue;
+      if (Math.hypot(o.x - x, o.y - y) < radius * S) dash(o, x, y, 0.8);
+    }
+  }
+  function miss(x, y, label) {
+    misses++; updateCount();
+    ripples.push({ x, y, life: 0.5 });
+    if (label) popup(x, y - 18, label);
+  }
+
+  function tryCatch(b, x, y) {
+    const m = MODES[mode], nv = nerves();
+    if (rnd() < Math.min(0.85, m.dodge * nv)) {
+      dash(b, x, y, 1.15); scatter(x, y, 160);
+      miss(b.x, b.y, ['휙!', '어림없지', '놓쳤다!'][Math.floor(Math.random() * 3)]);
+      return;
+    }
+    if (rnd() < m.escape * nv) {
+      for (let i = 0; i < 3; i++) feathers.push({ x: b.x, y: b.y, vx: (Math.random() - 0.5) * 140, vy: -Math.random() * 90, rot: Math.random() * 6, vr: (Math.random() - 0.5) * 6, life: 1.4 });
+      dash(b, x, y, 1.2); scatter(x, y, 220);
+      miss(b.x, b.y, '푸드덕! 빠져나갔다');
+      return;
+    }
+    catchBird(b);
+  }
+
+  function localPoint(e) { const r = canvas.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; }
+  canvas.addEventListener('pointermove', e => {
+    const [x, y] = localPoint(e), now = performance.now(), dtm = Math.max(8, now - ptr.t);
+    if (ptr.t && now - ptr.t < 120) {
+      ptr.vx = ptr.vx * 0.6 + ((x - ptr.x) / dtm * 1000) * 0.4;
+      ptr.vy = ptr.vy * 0.6 + ((y - ptr.y) / dtm * 1000) * 0.4;
+    } else { ptr.vx = 0; ptr.vy = 0; }
+    ptr.x = x; ptr.y = y; ptr.t = now;
+    if (e.pointerType === 'mouse') ptr.hover = true; else ptr.until = now + 400;
+  });
+  canvas.addEventListener('pointerleave', () => { ptr.hover = false; ptr.vx = ptr.vy = 0; });
+  canvas.addEventListener('pointerdown', e => {
+    if (modalOpen) return;
+    const [x, y] = localPoint(e); ptr.x = x; ptr.y = y;
+    const touch = e.pointerType !== 'mouse';
+    if (touch) ptr.until = performance.now() + 700;
+    const b = hitTest(x, y, touch);
+    if (b) tryCatch(b, x, y);
+    else { miss(x, y); if (MODES[mode].dodge > 0) scatter(x, y, 200); }
+  });
+
+  $('#grab').addEventListener('click', () => {
+    if (modalOpen) return;
+    const c = birds.filter(b => b.state === 'fly' && b.delay <= 0);
+    if (!c.length) return;
+    const b = c[Math.floor(rnd() * c.length)];
+    if (rnd() < MODES[mode].blind) catchBird(b);
+    else { dash(b, b.x, b.y + 10, 1); miss(b.x, b.y, '눈 감고는 무리예요'); }
+  });
+  $('#closeSlip').addEventListener('click', closeSlip);
+  $('#veil').addEventListener('click', e => { if (e.target.id === 'veil') closeSlip(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#veil').hidden) closeSlip(); });
+  $('#release').addEventListener('click', () => { if (!modalOpen) release(true); });
+  $('#items').addEventListener('input', () => { updateNote(); store.set('jebi-items', $('#items').value); });
+  document.querySelectorAll('.chip').forEach(btn => btn.addEventListener('click', () => {
+    $('#items').value = PRESETS[btn.dataset.preset]; updateNote(); if (!modalOpen) release(true);
+  }));
+  document.querySelectorAll('input[name="mode"]').forEach(r => r.addEventListener('change', () => {
+    mode = r.value; $('#modeHint').textContent = MODES[mode].hint; store.set('jebi-mode2', mode);
+  }));
+
+  function step(dt, now) {
+    const m = MODES[mode], k = reduce ? 0.6 : 1;
+    const fleeOn = ptr.hover || now < ptr.until;
+    const nv = nerves();
+    // 마우스가 갈 곳을 미리 읽음
+    const stale = now - ptr.t > 120;
+    const fx = ptr.x + (stale ? 0 : ptr.vx * m.predict), fy = ptr.y + (stale ? 0 : ptr.vy * m.predict);
+    for (const c of clouds) { c.x += c.v * dt; if (c.x - c.s * 70 > W) c.x = -c.s * 70; }
+    const top = 70, bot = H - 90, mg = 60;
+    for (const b of birds) {
+      if (b.delay > 0) { b.delay -= dt; continue; }
+      if (b.state === 'leaving') {
+        b.vy -= 380 * dt; b.x += b.vx * dt; b.y += b.vy * dt; b.phase += dt * 32;
+        if (b.y < -60 || b.x < -80 || b.x > W + 80) b.dead = true;
+        continue;
+      }
+      b.turn += (Math.random() - 0.5) * 7 * dt; b.turn = Math.max(-1.5, Math.min(1.5, b.turn));
+      let ang = Math.atan2(b.vy, b.vx) + b.turn * dt, v = Math.hypot(b.vx, b.vy);
+      b.vx = Math.cos(ang) * v; b.vy = Math.sin(ang) * v;
+      let ax = 0, ay = 0;
+      if (b.x < mg) ax += (mg - b.x) * 5; else if (b.x > W - mg) ax -= (b.x - (W - mg)) * 5;
+      if (b.y < top) ay += (top - b.y) * 5; else if (b.y > bot) ay -= (b.y - bot) * 5;
+      for (const o of birds) {
+        if (o === b || o.state !== 'fly' || o.delay > 0) continue;
+        const dx = b.x - o.x, dy = b.y - o.y, d2 = dx * dx + dy * dy;
+        if (d2 < 1600 && d2 > 0.01) { const d = Math.sqrt(d2); ax += dx / d * (40 - d) * 7; ay += dy / d * (40 - d) * 7; }
+      }
+      if (fleeOn && m.fleeR > 0) {
+        const R = m.fleeR * S * Math.sqrt(nv);
+        const pts = m.predict ? [[ptr.x, ptr.y], [fx, fy]] : [[ptr.x, ptr.y]];
+        for (const [qx, qy] of pts) {
+          const dx = b.x - qx, dy = b.y - qy, d = Math.hypot(dx, dy);
+          if (d < R && d > 0.01) { const f = 1 - d / R; ax += dx / d * f * m.flee * nv; ay += dy / d * f * m.flee * nv; b.excite = 1; }
+        }
+      }
+      b.vx += ax * dt; b.vy += ay * dt; b.vy *= 1 - 0.4 * dt;
+      b.excite = Math.max(0, b.excite - dt * 0.8);
+      v = Math.hypot(b.vx, b.vy);
+      const cruise = m.cruise * k * S, maxV = cruise * 1.5 + (m.max * k * S - cruise * 1.5) * b.excite;
+      let target = Math.min(maxV, Math.max(cruise * 0.6, v));
+      target += (cruise - target) * Math.min(1, dt * 0.6) * (1 - b.excite);
+      if (v > 0.01) { b.vx *= target / v; b.vy *= target / v; }
+      b.x += b.vx * dt; b.y += b.vy * dt;
+      if (b.entered) {
+        if (b.x < 10) { b.x = 10; b.vx = Math.abs(b.vx); } else if (b.x > W - 10) { b.x = W - 10; b.vx = -Math.abs(b.vx); }
+        if (b.y < 20) { b.y = 20; b.vy = Math.abs(b.vy); } else if (b.y > H - 50) { b.y = H - 50; b.vy = -Math.abs(b.vy); }
+      } else if (b.x > 20 && b.x < W - 20) b.entered = true;
+      b.phase += dt * (9 + target * 0.05);
+    }
+    for (const p of popups) { p.y -= 30 * dt; p.life -= dt; }
+    popups = popups.filter(p => p.life > 0);
+    if (birds.some(b => b.dead)) birds = birds.filter(b => !b.dead);
+    for (const f of feathers) { f.vy += 50 * dt; f.vx *= 1 - 1.5 * dt; f.x += (f.vx + Math.sin(f.rot * 2) * 18) * dt; f.y += Math.min(f.vy, 60) * dt; f.rot += f.vr * dt; f.life -= dt; }
+    feathers = feathers.filter(f => f.life > 0);
+    for (const r of ripples) r.life -= dt;
+    ripples = ripples.filter(r => r.life > 0);
+  }
+
+  function ellipse(x, y, rx, ry) { ctx.beginPath(); ctx.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2); ctx.fill(); }
+
+  function drawBird(b, t) {
+    const s = S * b.scale, a = Math.atan2(b.vy, b.vx);
+    ctx.save(); ctx.translate(b.x, b.y); ctx.rotate(a); ctx.scale(s, s);
+    const f = 0.5 + 0.5 * Math.sin(b.phase), span = 7 + 13 * f, tip = -9 + 4 * f;
+    ctx.fillStyle = C.bird;
+    ctx.beginPath(); ctx.moveTo(-6, -2.6); ctx.lineTo(-26, -8.5); ctx.lineTo(-15, 0); ctx.lineTo(-26, 8.5); ctx.lineTo(-6, 2.6); ctx.closePath(); ctx.fill();
+    for (const g of [-1, 1]) {
+      ctx.beginPath(); ctx.moveTo(4, 2 * g);
+      ctx.quadraticCurveTo(2, span * g * 1.05, tip, span * g);
+      ctx.quadraticCurveTo(-3, span * 0.45 * g, -5, 2.2 * g);
+      ctx.closePath(); ctx.fill();
+    }
+    ellipse(0, 0, 11, 4.2);
+    ctx.fillStyle = C.belly; ellipse(-1.5, 0, 6.5, 2.1);
+    ctx.fillStyle = C.bird; ellipse(9.5, 0, 4.3, 4.1);
+    ctx.fillStyle = C.seal; ellipse(11.6, 0, 2.3, 2.6);
+    ctx.fillStyle = C.bird; ctx.beginPath(); ctx.moveTo(13.4, -1.1); ctx.lineTo(16.4, 0); ctx.lineTo(13.4, 1.1); ctx.fill();
+    ctx.restore();
+
+    if (b.state !== 'fly') { b.slipX = null; return; }
+    const bx = b.x + Math.cos(a) * 16 * s, by = b.y + Math.sin(a) * 16 * s;
+    const sway = Math.sin(t * 4 + b.seed) * 0.25 - b.vx * 0.0015;
+    const len = 9 * s, sx = bx + Math.sin(sway) * len, sy = by + Math.cos(sway) * len;
+    ctx.strokeStyle = C.muted; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(bx, by); ctx.lineTo(sx, sy); ctx.stroke();
+    ctx.save(); ctx.translate(sx, sy + 4 * s); ctx.rotate(-sway * 0.8);
+    const pw = 13 * s, ph = 8 * s;
+    ctx.fillStyle = C.paper; ctx.fillRect(-pw / 2, -ph / 2, pw, ph);
+    ctx.strokeStyle = 'rgba(70,50,20,.35)'; ctx.lineWidth = 0.8;
+    ctx.strokeRect(-pw / 2, -ph / 2, pw, ph);
+    ctx.beginPath(); ctx.moveTo(-pw / 2, -ph / 2); ctx.lineTo(0, ph * 0.1); ctx.lineTo(pw / 2, -ph / 2); ctx.stroke();
+    ctx.restore();
+    b.slipX = sx; b.slipY = sy + 4 * s;
+  }
+
+  function hill(y0, amp, freq, phase, color) {
+    ctx.fillStyle = color; ctx.beginPath(); ctx.moveTo(0, H);
+    for (let x = 0; x <= W + 20; x += 16) ctx.lineTo(x, y0 + Math.sin(x * freq + phase) * amp + Math.sin(x * freq * 2.3 + phase * 1.7) * amp * 0.4);
+    ctx.lineTo(W, H); ctx.closePath(); ctx.fill();
+  }
+
+  function draw(t) {
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    const g = ctx.createLinearGradient(0, 0, 0, H);
+    g.addColorStop(0, C['sky-top']); g.addColorStop(1, C['sky-bot']);
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+
+    ctx.fillStyle = C.star;
+    for (const st of stars) { ctx.beginPath(); ctx.arc(st.x * W, st.y * H, st.r, 0, Math.PI * 2); ctx.fill(); }
+
+    const ox = W * 0.64, oy = H * 0.17, orr = Math.max(18, Math.min(W, H) * 0.055);
+    ctx.fillStyle = C.orb; ctx.globalAlpha = 0.25; ctx.beginPath(); ctx.arc(ox, oy, orr * 1.9, 0, Math.PI * 2); ctx.fill();
+    ctx.globalAlpha = 0.95; ctx.beginPath(); ctx.arc(ox, oy, orr, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1;
+
+    ctx.fillStyle = C.cloud;
+    for (const c of clouds) {
+      const r = 22 * c.s;
+      ctx.beginPath();
+      ctx.arc(c.x, c.y, r, 0, Math.PI * 2); ctx.arc(c.x + r * 1.1, c.y - r * 0.4, r * 1.2, 0, Math.PI * 2);
+      ctx.arc(c.x + r * 2.3, c.y, r * 0.95, 0, Math.PI * 2); ctx.arc(c.x + r * 1.2, c.y + r * 0.3, r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    hill(H - 78, 16, 0.006, 1, C.hill2);
+    const px = W * 0.85, armY = H * 0.2;
+    ctx.fillStyle = C.pole; ctx.fillRect(px - 3, armY - 16, 6, H - armY + 16); ctx.fillRect(px - 34, armY, 68, 4);
+    ctx.strokeStyle = C.wire; ctx.lineWidth = 1.3;
+    [-28, 28].forEach((o, i) => {
+      const ax = px + o;
+      ctx.beginPath(); ctx.moveTo(-10, armY + H * 0.06 + i * 7);
+      ctx.quadraticCurveTo(ax * 0.5, armY + H * 0.14 + i * 7, ax, armY);
+      ctx.quadraticCurveTo(ax + (W - ax) * 0.5, armY + H * 0.07, W + 10, armY + H * 0.04 + i * 5);
+      ctx.stroke();
+    });
+    hill(H - 42, 10, 0.009, 3, C.hill);
+
+    for (const b of birds) if (b.delay <= 0) drawBird(b, t);
+
+    ctx.fillStyle = C.bird;
+    for (const f of feathers) {
+      ctx.save(); ctx.translate(f.x, f.y); ctx.rotate(f.rot); ctx.globalAlpha = Math.min(1, f.life);
+      ellipse(0, 0, 4.5 * S, 1.5 * S); ctx.restore();
+    }
+    ctx.globalAlpha = 1;
+    for (const r of ripples) {
+      ctx.strokeStyle = r.seal ? C.seal : C.fg; ctx.globalAlpha = r.life * 1.4; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.arc(r.x, r.y, (1 - r.life / 0.5) * 28 + 4, 0, Math.PI * 2); ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+
+    ctx.textAlign = 'center'; ctx.fillStyle = C.fg;
+    ctx.font = `${Math.round(17 * S)}px "Song Myung", serif`;
+    for (const p of popups) { ctx.globalAlpha = Math.min(1, p.life * 2); ctx.fillText(p.text, Math.max(70, Math.min(W - 70, p.x)), Math.max(24, p.y)); }
+    ctx.globalAlpha = 1;
+    if (total > 0 && caught.length === 0) {
+      ctx.globalAlpha = 0.7; ctx.font = `15px ${getComputedStyle(document.body).fontFamily}`;
+      ctx.fillText('날아다니는 제비를 눌러서 잡아 보세요', W / 2, H - 104);
+      ctx.globalAlpha = 1;
+    } else if (total > 0 && !flying().length && !modalOpen) {
+      ctx.font = `${Math.round(26 * S)}px "Song Myung", serif`;
+      ctx.fillText('모든 제비를 잡았어요', W / 2, H * 0.46);
+      ctx.globalAlpha = 0.7; ctx.font = `14px ${getComputedStyle(document.body).fontFamily}`;
+      ctx.fillText('‘제비 날려 보내기’를 누르면 다시 날아와요', W / 2, H * 0.46 + 30);
+      ctx.globalAlpha = 1;
+    }
+  }
+
+  // 시작 상태 복원
+  const savedItems = store.get('jebi-items');
+  if (savedItems && savedItems.trim()) $('#items').value = savedItems;
+  const savedMode = store.get('jebi-mode2');
+  if (savedMode && MODES[savedMode]) { mode = savedMode; $('#m-' + mode).checked = true; }
+  $('#modeHint').textContent = MODES[mode].hint;
+  updateNote();
+  release(false);
+
+  let last = performance.now(), T = 0;
+  function frame(now) {
+    const dt = Math.min(0.05, (now - last) / 1000); last = now; T += dt;
+    step(dt, now); draw(T);
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
