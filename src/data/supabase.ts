@@ -36,7 +36,7 @@ export async function submitRun(
   const c = sb();
   if (!c) return { ok: false, error: 'no-supabase' };
   try {
-    const { data, error } = await c.functions.invoke('submit-run', {
+    const { data, error } = await c.functions.invoke('jebi-submit-run', {
       body: { action: 'submit', run: r, nickname, deviceId, clientVersion: CLIENT_VERSION },
     });
     if (error) return { ok: false, error: await errorMessage(error) };
@@ -52,7 +52,7 @@ export async function setNickname(runId: string, deviceId: string, nickname: str
   const c = sb();
   if (!c) return { ok: false, error: 'no-supabase' };
   try {
-    const { data, error } = await c.functions.invoke('submit-run', {
+    const { data, error } = await c.functions.invoke('jebi-submit-run', {
       body: { action: 'nickname', runId, deviceId, nickname },
     });
     if (error) return { ok: false, error: await errorMessage(error) };
@@ -69,11 +69,11 @@ export async function fetchLeaderboard(level: number | 'overall', limit = 100): 
   if (!c) return [];
   try {
     if (level === 'overall') {
-      const { data, error } = await c.rpc('leaderboard_overall', { p_limit: limit });
+      const { data, error } = await c.rpc('jebi_leaderboard_overall', { p_limit: limit });
       if (error || !data) return [];
       return data as LeaderboardRow[];
     }
-    const { data, error } = await c.from('leaderboard_level')
+    const { data, error } = await c.from('jebi_leaderboard_level')
       .select('id, nickname, level, time_ms, blanks, misses, created_at')
       .eq('level', level)
       .order('time_ms', { ascending: true })
@@ -89,7 +89,7 @@ export async function fetchHallOfFame(): Promise<HallOfFameRow[]> {
   const c = sb();
   if (!c) return [];
   try {
-    const { data, error } = await c.from('hall_of_fame')
+    const { data, error } = await c.from('jebi_hall_of_fame')
       .select('nickname, created_at, first')
       .order('created_at', { ascending: true });
     if (error || !data) return [];
@@ -142,7 +142,7 @@ export async function claimRuns(deviceId: string): Promise<{ ok: boolean; claime
     if (!uid) return { ok: false };
     const key = uid + ':' + deviceId;
     if (claimed.has(key)) return { ok: true, claimed: 0 };
-    const { data, error } = await c.rpc('claim_runs', { p_device_id: deviceId });
+    const { data, error } = await c.rpc('jebi_claim_runs', { p_device_id: deviceId });
     if (error) return { ok: false };
     claimed.add(key);
     return { ok: true, claimed: typeof data === 'number' ? data : undefined };

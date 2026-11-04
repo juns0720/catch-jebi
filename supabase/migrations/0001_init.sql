@@ -1,10 +1,10 @@
--- Catch The Jebi: runs 테이블, 뷰, RPC.
+-- Catch The Jebi: jebi_runs 테이블, 뷰, RPC.
 -- Supabase 대시보드 SQL Editor 에 그대로 붙여넣어 실행할 수 있다.
 
 create extension if not exists pgcrypto;
 
--- ---------------------------------------------------------------- runs
-create table if not exists public.runs (
+-- ---------------------------------------------------------------- jebi_runs
+create table if not exists public.jebi_runs (
   id             uuid primary key default gen_random_uuid(),
   created_at     timestamptz not null default now(),
   device_id      text not null,
@@ -24,25 +24,25 @@ create table if not exists public.runs (
   flagged        boolean not null default false
 );
 
-create index if not exists runs_level_time_idx
-  on public.runs (level, time_ms)
+create index if not exists jebi_runs_level_time_idx
+  on public.jebi_runs (level, time_ms)
   where cleared and not flagged;
-create index if not exists runs_device_idx on public.runs (device_id);
-create index if not exists runs_user_idx on public.runs (user_id) where user_id is not null;
-create index if not exists runs_hof_idx
-  on public.runs (created_at)
+create index if not exists jebi_runs_device_idx on public.jebi_runs (device_id);
+create index if not exists jebi_runs_user_idx on public.jebi_runs (user_id) where user_id is not null;
+create index if not exists jebi_runs_hof_idx
+  on public.jebi_runs (created_at)
   where level = 15 and cleared and not flagged;
 
 -- RLS: 정책을 하나도 만들지 않는다 = anon/authenticated 의 직접 select/insert/update/delete 전부 불허.
 -- 쓰기는 Edge Function(service role), 읽기는 아래 뷰/RPC 로만.
-alter table public.runs enable row level security;
-revoke all on public.runs from anon, authenticated;
-grant all on public.runs to service_role;
+alter table public.jebi_runs enable row level security;
+revoke all on public.jebi_runs from anon, authenticated;
+grant all on public.jebi_runs to service_role;
 
 -- ---------------------------------------------------------------- views
 -- 뷰는 소유자(postgres) 권한으로 실행되므로 RLS 를 우회해 필요한 컬럼만 공개한다.
 -- device_id / user_id / taps 는 노출하지 않는다.
-create or replace view public.leaderboard_level as
+create or replace view public.jebi_leaderboard_level as
 select
   r.id,
   coalesce(r.nickname, '이름 없는 제비') as nickname,
@@ -51,11 +51,11 @@ select
   r.blanks,
   r.misses,
   r.created_at
-from public.runs r
+from public.jebi_runs r
 where r.cleared and not r.flagged;
 
 -- 박씨 제비 명예의 전당: 레벨 15 클리어, 닉네임 있는 사람(플레이어당 가장 이른 기록).
-create or replace view public.hall_of_fame as
+create or replace view public.jebi_hall_of_fame as
 select
   h.nickname,
   h.created_at,
@@ -63,17 +63,17 @@ select
 from (
   select distinct on (coalesce(r.user_id::text, r.device_id))
     r.id, r.nickname, r.created_at
-  from public.runs r
+  from public.jebi_runs r
   where r.level = 15 and r.cleared and not r.flagged and r.nickname is not null
   order by coalesce(r.user_id::text, r.device_id), r.created_at asc, r.id asc
 ) h;
 
-revoke all on public.leaderboard_level, public.hall_of_fame from public, anon, authenticated;
-grant select on public.leaderboard_level, public.hall_of_fame to anon, authenticated;
+revoke all on public.jebi_leaderboard_level, public.jebi_hall_of_fame from public, anon, authenticated;
+grant select on public.jebi_leaderboard_level, public.jebi_hall_of_fame to anon, authenticated;
 
 -- ---------------------------------------------------------------- rpc
 -- 종합 랭킹: 플레이어(user_id 또는 device_id)별 최고 레벨, 그 레벨의 최단 기록.
-create or replace function public.leaderboard_overall(p_limit int default 100)
+create or replace function public.jebi_leaderboard_overall(p_limit int default 100)
 returns table (
   id         uuid,
   nickname   text,
@@ -102,7 +102,7 @@ as $$
         partition by coalesce(r.user_id::text, r.device_id)
         order by r.level desc, r.time_ms asc, r.created_at asc
       ) as rn
-    from public.runs r
+    from public.jebi_runs r
     where r.cleared and not r.flagged
   ) b
   where b.rn = 1
@@ -110,11 +110,11 @@ as $$
   limit least(greatest(coalesce(p_limit, 100), 1), 200);
 $$;
 
-revoke all on function public.leaderboard_overall(int) from public;
-grant execute on function public.leaderboard_overall(int) to anon, authenticated;
+revoke all on function public.jebi_leaderboard_overall(int) from public;
+grant execute on function public.jebi_leaderboard_overall(int) to anon, authenticated;
 
 -- 로그인 후 같은 device_id 의 기록을 내 계정으로 묶는다. 묶은 행 수를 돌려준다.
-create or replace function public.claim_runs(p_device_id text)
+create or replace function public.jebi_claim_runs(p_device_id text)
 returns int
 language plpgsql
 security definer
@@ -126,7 +126,7 @@ begin
   if auth.uid() is null then
     raise exception 'not authenticated' using errcode = '28000';
   end if;
-  update public.runs
+  update public.jebi_runs
      set user_id = auth.uid()
    where device_id = p_device_id
      and user_id is null;
@@ -135,5 +135,5 @@ begin
 end;
 $$;
 
-revoke all on function public.claim_runs(text) from public, anon;
-grant execute on function public.claim_runs(text) to authenticated;
+revoke all on function public.jebi_claim_runs(text) from public, anon;
+grant execute on function public.jebi_claim_runs(text) to authenticated;

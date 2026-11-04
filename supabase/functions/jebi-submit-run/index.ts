@@ -62,7 +62,7 @@ Deno.serve(async (req: Request) => {
     if (typeof runId !== 'string' || !/^[0-9a-f-]{36}$/i.test(runId)) return json({ ok: false, error: 'invalid runId' }, 400);
     const c = checkNickname(body.nickname);
     if ('error' in c) return json({ ok: false, error: c.error }, 400);
-    const { data, error } = await db.from('runs')
+    const { data, error } = await db.from('jebi_runs')
       .update({ nickname: c.nickname })
       .eq('id', runId)
       .eq('device_id', deviceId)
@@ -118,7 +118,7 @@ Deno.serve(async (req: Request) => {
   const acc = isNum(accuracy) ? Math.min(Math.max(accuracy, 0), 1) : null;
   const clientVersion = typeof body.clientVersion === 'string' ? body.clientVersion.slice(0, 32) : null;
 
-  const { data: row, error: insErr } = await db.from('runs').insert({
+  const { data: row, error: insErr } = await db.from('jebi_runs').insert({
     device_id: deviceId,
     nickname,
     level,
@@ -139,7 +139,7 @@ Deno.serve(async (req: Request) => {
   // 실패/플래그 기록은 순위를 계산하지 않는다.
   if (!cleared || flagged) return json({ ok: true, id: row.id });
 
-  const base = () => db.from('runs')
+  const base = () => db.from('jebi_runs')
     .select('id', { count: 'exact', head: true })
     .eq('level', level).eq('cleared', true).eq('flagged', false);
   const [total, slower, faster] = await Promise.all([
