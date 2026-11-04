@@ -51,7 +51,7 @@ export default async function handler(req: Request): Promise<Response> {
     // ?site=1 : 랜딩(제비뽑기) 공용 카드. 도전장 파라미터 없이 사이트 소개만 그린다.
     if (url.searchParams.get('site')) {
       const winStamp = el({
-        position: 'absolute', top: 72, right: 80,
+        position: 'absolute', bottom: 56, right: 72,
         width: 190, height: 190, borderRadius: 95,
         border: `8px solid ${SEAL}`, color: SEAL,
         alignItems: 'center', justifyContent: 'center',
@@ -69,9 +69,11 @@ export default async function handler(req: Request): Promise<Response> {
         padding: '56px 64px 40px 64px',
       }, [
         el({ fontFamily: gowun_, fontSize: 40, opacity: 0.8 }, '살아있는 제비뽑기'),
-        el({ fontFamily: song_, fontSize: 132, lineHeight: 1.05, marginTop: 8 }, 'Catch The Jebi'),
-        el({ fontFamily: gowun_, fontSize: 44, marginTop: 28, lineHeight: 1.4, maxWidth: 760 },
-          '강남 갔던 제비들이 쪽지를 물고 돌아왔어요. 날아다니는 제비를 잡아 쪽지를 뽑아 보세요.'),
+        el({ fontFamily: song_, fontSize: 124, lineHeight: 1.05, marginTop: 8 }, 'Catch The Jebi'),
+        el({ flexDirection: 'column', fontFamily: gowun_, fontSize: 42, marginTop: 28, lineHeight: 1.45, maxWidth: 780 }, [
+          el({}, '강남 갔던 제비들이 쪽지를 물고 돌아왔어요.'),
+          el({}, '날아다니는 제비를 잡아 쪽지를 뽑아 보세요.'),
+        ]),
         el({ flexGrow: 1 }),
         el({ fontFamily: gowun_, fontSize: 30, opacity: 0.7 }, 'catch-jebi.vercel.app'),
         winStamp,
