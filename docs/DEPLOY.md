@@ -19,6 +19,10 @@
 |---|---|---|
 | `VITE_SITE_URL` | https://catch-jebi.vercel.app | 설정됨 |
 | `VITE_KAKAO_JS_KEY` | Kakao 플랫폼 키 > JavaScript 키 (공개용 클라이언트 키) | 설정됨 (`--type config`, 2026-11-05) |
+| `VITE_KAKAO_REST_KEY` | Kakao 플랫폼 키 > REST API 키 (카카오 로그인 client_id, 인가 URL에 노출되는 값) | 설정됨 |
+| `KAKAO_REST_API_KEY` | 같은 값. `api/kakao-token`이 토큰 교환에 쓴다 | 설정됨 |
+| `KAKAO_CLIENT_SECRET` | 콘솔 REST API 키 카드의 "카카오 로그인 클라이언트 시크릿 활성화"를 켤 때만 | 미설정 (활성화 OFF 상태) |
+| `VITE_GOOGLE_CLIENT_ID` | Google Cloud 프로젝트 `catch-jebi` > 인증 > 클라이언트 > 웹 클라이언트 ID | **미설정** |
 | `VITE_SUPABASE_URL` | https://qgalikbkzqnzzwceqdpt.supabase.co | 설정됨 |
 | `VITE_SUPABASE_ANON_KEY` | Supabase anon public (공개용 키) | 설정됨 (`--type config`) |
 | `VITE_UMAMI_WEBSITE_ID` | Umami > Websites > Website ID | 설정됨 |
@@ -43,9 +47,11 @@ npx supabase functions deploy jebi-submit-run --no-verify-jwt --yes
 
 완료된 것 (2026-11-05): Authentication → URL Configuration의 Redirect URLs에 `https://catch-jebi.vercel.app/challenge/**`, `http://localhost:5173/challenge/**` 추가됨 (Site URL은 study-note 것 그대로).
 
-남은 것 (카카오 로그인용, 비밀 키 입력이라 사용자가 직접):
-1. Kakao 콘솔 앱 설정 → 보안(어드민 키/보안)에서 Client Secret 생성, 코드 활성화 ON.
-2. Supabase Authentication → Providers → Kakao: "Kakao enabled" ON, REST API Key(Kakao 플랫폼 키 페이지)와 Client Secret Code 입력, Save. Callback URL `https://qgalikbkzqnzzwceqdpt.supabase.co/auth/v1/callback`은 이미 Kakao 리다이렉트 URI에 등록돼 있다.
+Kakao provider (2026-11-05): "Kakao enabled" ON, REST API Key·Client Secret 입력됨, "Allow users without an email" ON.
+단, Supabase 기본 OAuth 흐름은 `account_email` 스코프를 항상 요청하는데 이메일 동의항목은 비즈 앱(사업자 등록)에서만 쓸 수 있어 KOE205로 막힌다.
+그래서 앱은 provider의 OAuth 흐름 대신 **id_token 흐름**을 쓴다: 브라우저가 kauth.kakao.com/oauth/authorize(client_id=REST 키, scope `openid profile_nickname profile_image`, nonce)로 갔다가 `/challenge/?code=`로 돌아오면 `/api/kakao-token`이 코드를 id_token으로 바꾸고 `supabase.auth.signInWithIdToken({ provider: 'kakao' })`로 세션을 만든다. provider 설정에서 실제로 쓰이는 건 enabled 와 Client ID(aud 검증)뿐이다.
+
+Google provider (남은 것): Authentication → Providers → Google: enabled ON, "Client IDs"에 Google 웹 클라이언트 ID 입력 (id_token 흐름이라 OAuth용 시크릿은 비워도 된다), Save.
 
 ### 2. Kakao Developers (앱 1637686, 새 콘솔 기준)
 완료된 것 (2026-11-05):
@@ -53,8 +59,21 @@ npx supabase functions deploy jebi-submit-run --no-verify-jwt --yes
   - 리다이렉트 URI 입력란은 값을 치고 Enter를 눌러야 반영된다. 저장 버튼만 누르면 빈 값으로 저장됨.
 - 제품 설정 → 카카오 로그인 → 일반: 상태 ON. 동의항목: 닉네임·프로필 사진 필수 동의.
 - JavaScript 키는 Vercel `VITE_KAKAO_JS_KEY`에 넣고 재배포함.
+- REST API 키 카드(⋯ → 수정): 카카오 로그인 리다이렉트 URI `https://catch-jebi.vercel.app/challenge/`, `http://localhost:5173/challenge/` (리다이렉트 URI는 키 카드별로 따로 등록된다). "카카오 로그인 클라이언트 시크릿 활성화"는 OFF (켜면 Vercel에 `KAKAO_CLIENT_SECRET`을 넣어야 한다).
+- 카카오 로그인 → 일반: OpenID Connect 활성화 ON (id_token을 받기 위해 필요).
+- `/api/kakao-token`에 가짜 코드를 보내면 KOE320(코드 없음)이 돌아온다 = 환경변수와 카카오 연결 정상.
 
-남은 것: 위 Supabase 절의 Client Secret 생성·입력.
+남은 것: 실제 카카오 계정으로 로그인 흐름 한 번 확인 (동의 화면 → 돌아와서 "카카오 로그인 됐어요" 토스트, 헤더에 닉네임).
+
+### 2-1. Google 로그인 (Google Cloud 프로젝트 `catch-jebi`)
+Google Identity Services 버튼 → id_token → `signInWithIdToken({ provider: 'google' })`. 클라이언트 ID만 있으면 되고 시크릿이 필요 없다.
+1. 프로젝트 `catch-jebi`는 만들어져 있다 (2026-11-05). https://console.cloud.google.com/auth/overview?project=catch-jebi 에서 Google Auth Platform 설정: 앱 이름 `Catch The Jebi`, 지원 이메일, 대상 **외부**, 연락처 이메일, 정책 동의 → 만들기.
+2. 대상(Audience) 페이지에서 **앱 게시**(테스트 → 프로덕션). 기본 스코프(openid/email/profile)만 쓰므로 검수는 필요 없다.
+3. 클라이언트 → 클라이언트 만들기 → 웹 애플리케이션, 이름 `catch-jebi web`:
+   - 승인된 JavaScript 원본: `https://catch-jebi.vercel.app`, `http://localhost:5173`, `http://localhost`
+   - 승인된 리디렉션 URI: `https://qgalikbkzqnzzwceqdpt.supabase.co/auth/v1/callback` (지금 흐름엔 안 쓰지만 나중에 OAuth 흐름을 켤 때 필요)
+   - 만들기 → 클라이언트 ID 복사.
+4. 클라이언트 ID를 Vercel `VITE_GOOGLE_CLIENT_ID`(Production/Preview/Development)와 Supabase Google provider의 "Client IDs"에 넣고 재배포. 없으면 Google 버튼이 그려지지 않을 뿐 다른 기능엔 영향 없다.
 공유 카드 미리보기가 안 바뀌면 https://developers.kakao.com/tool/debugger/sharing 에서 캐시 초기화.
 
 ### 3. Umami

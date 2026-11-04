@@ -138,4 +138,4 @@ export interface Progress {
 export type AnalyticsEvent =
   | 'landing_view' | 'lottery_done' | 'challenge_enter' | 'run_start' | 'run_end' | 'run_quit'
   | 'result_view' | 'share_click' | 'challenge_open' | 'challenge_complete' | 'challenge_resend'
-  | 'mobile_gate_view' | 'mobile_send_to_me' | 'nickname_submit' | 'login_click';
+  | 'mobile_gate_view' | 'mobile_send_to_me' | 'nickname_submit' | 'login_click' | 'login_success';

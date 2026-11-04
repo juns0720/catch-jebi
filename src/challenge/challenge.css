@@ -19,6 +19,8 @@ a.btn { text-decoration: none; display: inline-block; }
 .home-top > * { pointer-events: auto; }
 .home-top-right { display: flex; align-items: center; gap: 8px; }
 .home-account { display: flex; align-items: center; gap: 8px; }
+.home-google:empty { display: none; }
+.home-google { display: flex; align-items: center; color-scheme: light; }
 .home-nick { font-size: 14px; padding: 6px 12px; border-radius: 999px; background: color-mix(in srgb, var(--surface) 85%, transparent); border: 1px solid var(--line); }
 .home-card {
   width: min(560px, 100%); margin: auto; display: grid; gap: 16px; padding: 24px;

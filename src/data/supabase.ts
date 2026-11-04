@@ -99,12 +99,107 @@ export async function fetchHallOfFame(): Promise<HallOfFameRow[]> {
   }
 }
 
-export async function signInWithKakao(redirectTo: string): Promise<void> {
-  const c = sb();
-  if (!c) return;
+/* ---------- 카카오 로그인 (OIDC id_token) ----------
+ * Supabase 기본 OAuth 흐름은 account_email 스코프를 항상 붙이는데, 이메일 동의항목은 비즈 앱에서만 쓸 수 있다.
+ * 그래서 kauth 인가 → /api/kakao-token 에서 id_token 교환 → signInWithIdToken 으로 세션을 만든다. */
+const KAKAO_REST_KEY = import.meta.env.VITE_KAKAO_REST_KEY as string | undefined;
+const KAKAO_STATE_KEY = 'jebi_kakao_login';
+
+interface PendingLogin { state: string; nonce: string; redirectUri: string; back: string }
+
+function rand(): string {
+  const b = new Uint8Array(16);
+  crypto.getRandomValues(b);
+  return Array.from(b, (x) => x.toString(16).padStart(2, '0')).join('');
+}
+
+export function canKakaoLogin(): boolean {
+  return hasSupabase() && !!KAKAO_REST_KEY;
+}
+
+/** kauth 로 이동한다. 돌아오면 completeKakaoLogin() 이 마무리한다. back = 돌아온 뒤 복원할 전체 URL */
+export async function signInWithKakao(back: string): Promise<void> {
+  if (!canKakaoLogin()) return;
+  const pending: PendingLogin = {
+    state: rand(), nonce: rand(),
+    redirectUri: location.origin + location.pathname, // 콘솔 REST API 키 카드에 등록된 URI 와 같아야 한다
+    back,
+  };
+  try { sessionStorage.setItem(KAKAO_STATE_KEY, JSON.stringify(pending)); } catch { return; }
+  const q = new URLSearchParams({
+    client_id: KAKAO_REST_KEY!, redirect_uri: pending.redirectUri, response_type: 'code',
+    scope: 'openid profile_nickname profile_image', state: pending.state, nonce: pending.nonce,
+  });
+  location.assign('https://kauth.kakao.com/oauth/authorize?' + q.toString());
+}
+
+/** 주소에 ?code&state 가 있으면 카카오 로그인 중. 부팅 직후 동기로 호출해 URL 을 원래대로 돌리고, 교환은 비동기로 진행한다. */
+export function completeKakaoLogin(): Promise<'ok' | 'error'> | null {
+  const q = new URLSearchParams(location.search);
+  const code = q.get('code');
+  const state = q.get('state');
+  const err = q.get('error');
+  if (!code && !err) return null;
+  let pending: PendingLogin | null = null;
   try {
-    await c.auth.signInWithOAuth({ provider: 'kakao', options: { redirectTo } });
-  } catch { /* 조용히 실패 */ }
+    const raw = sessionStorage.getItem(KAKAO_STATE_KEY);
+    pending = raw ? JSON.parse(raw) as PendingLogin : null;
+    sessionStorage.removeItem(KAKAO_STATE_KEY);
+  } catch { /* 저장소 없음 */ }
+  if (!pending || pending.state !== state) return null; // 우리가 보낸 요청이 아니다
+  history.replaceState(null, '', pending.back);
+  if (!code) return Promise.resolve('error');
+  const c = sb();
+  if (!c) return Promise.resolve('error');
+  const { nonce, redirectUri } = pending;
+  return (async () => {
+    try {
+      const r = await fetch('/api/kakao-token', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code, redirectUri }),
+      });
+      const j = await r.json().catch(() => ({})) as { id_token?: string; error?: string };
+      if (!r.ok || !j.id_token) return 'error';
+      const { data, error } = await c.auth.signInWithIdToken({ provider: 'kakao', token: j.id_token, nonce });
+      if (error || !data.user) return 'error';
+      // GoTrue 가 카카오 클레임(nickname/picture)을 메타데이터에 안 옮겼으면 직접 채운다
+      const m = (data.user.user_metadata ?? {}) as Record<string, unknown>;
+      if (!['name', 'nickname', 'preferred_username'].some((k) => typeof m[k] === 'string' && (m[k] as string).trim())) {
+        const claims = idTokenClaims(j.id_token);
+        const nick = typeof claims.nickname === 'string' ? claims.nickname.trim() : '';
+        if (nick) {
+          const patch: Record<string, string> = { nickname: nick, name: nick };
+          if (typeof claims.picture === 'string') patch.avatar_url = claims.picture;
+          await c.auth.updateUser({ data: patch }).catch(() => { /* 메타데이터는 부가 정보 */ });
+        }
+      }
+      return 'ok';
+    } catch {
+      return 'error';
+    }
+  })();
+}
+
+/** Google Identity Services 가 준 id_token 으로 세션을 만든다. nonce 는 GIS 에 해시로 보낸 것의 원문 */
+export async function signInWithGoogleIdToken(token: string, nonce: string): Promise<'ok' | 'error'> {
+  const c = sb();
+  if (!c) return 'error';
+  try {
+    const { data, error } = await c.auth.signInWithIdToken({ provider: 'google', token, nonce });
+    return error || !data.user ? 'error' : 'ok';
+  } catch {
+    return 'error';
+  }
+}
+
+function idTokenClaims(token: string): Record<string, unknown> {
+  try {
+    const p = token.split('.')[1] ?? '';
+    const b = p.replace(/-/g, '+').replace(/_/g, '/');
+    return JSON.parse(decodeURIComponent(Array.from(atob(b), (ch) => '%' + ch.charCodeAt(0).toString(16).padStart(2, '0')).join('')));
+  } catch {
+    return {};
+  }
 }
 
 export async function getSessionNickname(): Promise<string | null> {

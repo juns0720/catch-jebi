@@ -6,8 +6,9 @@ import { MAX_LEVEL, getLevel } from '@/game/levels';
 import { createGame } from '@/game/engine';
 import { createAudio } from '@/game/audio';
 import { loadProgress, recordRun, saveProgress } from '@/data/storage';
-import { getSessionNickname, setNickname, signInWithKakao, signOut, submitRun } from '@/data/supabase';
+import { canKakaoLogin, claimRuns, completeKakaoLogin, getSessionNickname, setNickname, signInWithKakao, signOut, submitRun } from '@/data/supabase';
 import { initAnalytics, track } from '@/data/analytics';
+import { googleSignedOut, mountGoogleButton, onGoogleLogin } from '@/data/google';
 import { buildChallengeUrl, buildOgUrl, copyText, getSiteUrl, initKakao, parseChallengeParams, shareKakao, tauntText } from '@/ui/share';
 import { showResultSlip } from '@/ui/slip';
 import type { SlipHandle } from '@/ui/slip';
@@ -34,6 +35,8 @@ if (!isPc) {
 function boot(): void {
   initAnalytics();
   initKakao((import.meta.env.VITE_KAKAO_JS_KEY as string | undefined) ?? '');
+  // 카카오에서 돌아온 길이면 URL 을 먼저 원래대로 돌린다 (아래 parseChallengeParams 가 도전장 쿼리를 봐야 한다)
+  const kakaoReturn = completeKakaoLogin();
 
   const canvas = document.getElementById('sky') as HTMLCanvasElement;
   const app = document.getElementById('app') as HTMLElement;
@@ -87,10 +90,32 @@ function boot(): void {
     onStart: (level) => { audio.resume(); startLevel(level); },
     onToggleMute: toggleMute,
     onLogin: () => { track('login_click'); void signInWithKakao(location.href); },
-    onLogout: () => { void signOut().finally(() => { sessionNick = null; home.setSession(null); }); },
+    onLogout: () => { googleSignedOut(); void signOut().finally(() => { sessionNick = null; home.setSession(null); }); },
+    mountGoogle: (el) => { void mountGoogleButton(el, { size: 'medium' }); },
+  });
+  onGoogleLogin((r) => {
+    if (r === 'ok') { track('login_success'); toast('Google 로그인 됐어요'); }
+    else toast('Google 로그인에 실패했어요. 다시 시도해 주세요');
+    void syncSession();
   });
 
-  getSessionNickname().then((n) => { sessionNick = n; home.setSession(n); }).catch(() => { /* 비로그인 */ });
+  function syncSession(): Promise<void> {
+    return getSessionNickname().then((n) => {
+      sessionNick = n;
+      home.setSession(n);
+      if (n != null) void claimRuns(progress.deviceId).then((r) => { if (r.claimed) invalidateHall(); });
+    }).catch(() => { /* 비로그인 */ });
+  }
+  if (kakaoReturn) {
+    void kakaoReturn.then((r) => {
+      if (r === 'ok') { track('login_success'); toast('카카오 로그인 됐어요'); }
+      else toast('카카오 로그인에 실패했어요. 다시 시도해 주세요');
+      return syncSession();
+    });
+  } else {
+    void syncSession();
+  }
+  if (!canKakaoLogin()) home.setLoginAvailable(false);
 
   /* ---------- 게임 수명 ---------- */
   function destroyGame(): void {
@@ -244,7 +269,9 @@ function boot(): void {
       },
     };
     const loginPrompt = {
+      kakao: canKakaoLogin(),
       onClick: () => { track('login_click'); void signInWithKakao(location.href); },
+      google: (el: HTMLElement) => { void mountGoogleButton(el, { size: 'medium', text: 'continue_with' }); },
     };
 
     // 박씨 제비(레벨 15 클리어)는 이름이 명예의 전당에 올라가므로 순위와 상관없이 바로 묻는다
