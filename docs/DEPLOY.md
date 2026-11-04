@@ -10,7 +10,7 @@
 | Vercel | 프로젝트 `catch-jebi`, GitHub 연결됨, 프로덕션 https://catch-jebi.vercel.app |
 | `/api/og`, `/c` | 배포됨. OG 이미지 콜드 3초, 캐시 후 50ms |
 | Kakao Developers | 앱 "Catch The Jebi" 생성됨 (앱 ID 1637686) |
-| Supabase | **미생성**. 조직의 무료 프로젝트 한도(2개) 초과 |
+| Supabase | 새 프로젝트 대신 기존 `study-note` 프로젝트 공유 (ref `qgalikbkzqnzzwceqdpt`). SQL·함수 배포는 CLI 로그인 대기 |
 | Umami | 웹사이트 "Catch The Jebi" 등록됨. Website ID는 Vercel 환경변수에 설정됨 |
 
 ## 환경변수 (Vercel)
@@ -19,8 +19,8 @@
 |---|---|---|
 | `VITE_SITE_URL` | https://catch-jebi.vercel.app | 설정됨 |
 | `VITE_KAKAO_JS_KEY` | Kakao 플랫폼 키 > JavaScript 키 | **직접 입력 필요** |
-| `VITE_SUPABASE_URL` | Supabase > Settings > API > Project URL | Supabase 생성 후 |
-| `VITE_SUPABASE_ANON_KEY` | Supabase > Settings > API > anon public | Supabase 생성 후 |
+| `VITE_SUPABASE_URL` | https://qgalikbkzqnzzwceqdpt.supabase.co | 설정됨 |
+| `VITE_SUPABASE_ANON_KEY` | Supabase > Settings > API > anon public | CLI 링크 후 설정 |
 | `VITE_UMAMI_WEBSITE_ID` | Umami > Websites > Website ID | 설정됨 |
 | `VITE_UMAMI_SCRIPT_URL` | https://cloud.umami.is/script.js | 설정됨 |
 
@@ -29,19 +29,24 @@
 
 ## 남은 수동 단계
 
-### 1. Supabase
-1. 조직의 기존 무료 프로젝트 중 하나를 일시정지(Pause)하거나, 유료 플랜으로 올린다.
-2. New project: 이름 `catch-the-jebi`, 리전 Northeast Asia (Seoul).
-3. SQL Editor에 `supabase/migrations/0001_init.sql` 전체를 붙여넣고 실행.
-4. Edge Function 배포 (터미널에서 한 번 로그인 필요):
+### 1. Supabase (기존 프로젝트 `study-note` 공유, ref `qgalikbkzqnzzwceqdpt`)
+무료 한도 때문에 새 프로젝트 대신 study-note 프로젝트 안에 넣는다. 이 앱의 객체는 전부 `jebi_` 접두어라 다른 테이블과 섞이지 않는다.
+단, Auth는 프로젝트 단위라 카카오 로그인 사용자가 study-note의 auth.users에 함께 쌓인다.
+
+1. 터미널에서 한 번 로그인 (브라우저가 열리고 승인만 하면 된다):
    ```
    npx supabase login
-   npx supabase link --project-ref <ref>
-   npx supabase functions deploy submit-run
    ```
-5. Settings → API의 Project URL과 anon key를 Vercel 환경변수에 넣는다.
-6. Authentication → Providers → Kakao: 켜고 Kakao REST API 키와 Client Secret 입력. 여기 표시되는 Callback URL을 복사.
-7. Authentication → URL Configuration: Site URL `https://catch-jebi.vercel.app`, Redirect URLs에 `https://catch-jebi.vercel.app/challenge/**`, `http://localhost:5173/challenge/**`.
+2. 그 다음은 명령으로 끝난다:
+   ```
+   npx supabase link --project-ref qgalikbkzqnzzwceqdpt
+   npx supabase db push
+   npx supabase functions deploy jebi-submit-run
+   ```
+   `db push`가 싫으면 SQL Editor에 `supabase/migrations/0001_init.sql`을 붙여넣어 실행해도 같다.
+3. Settings → API의 anon key를 Vercel `VITE_SUPABASE_ANON_KEY`에. URL은 `https://qgalikbkzqnzzwceqdpt.supabase.co` (설정됨).
+4. Authentication → Providers → Kakao: 켜고 Kakao REST API 키와 Client Secret 입력. 여기 표시되는 Callback URL을 복사.
+5. Authentication → URL Configuration: Site URL은 study-note 것을 건드리지 말고, Redirect URLs에 `https://catch-jebi.vercel.app/challenge/**`, `http://localhost:5173/challenge/**`만 추가.
 
 ### 2. Kakao Developers (앱 1637686, 새 콘솔 기준)
 새 콘솔은 플랫폼/도메인 설정이 "플랫폼 키" 페이지의 키 카드 안으로 들어갔다.
