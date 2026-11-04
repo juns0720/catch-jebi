@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>개인정보처리방침 · Catch The Jebi</title>
+<meta name="robots" content="noindex">
+<style>
+  :root { color-scheme: light dark; }
+  body { margin: 0; font: 15px/1.7 "Apple SD Gothic Neo", "Malgun Gothic", sans-serif; background: #e9eee8; color: #1b2230; }
+  @media (prefers-color-scheme: dark) { body { background: #0e141d; color: #e5e9ee; } a { color: #a9c6e8; } }
+  main { max-width: 720px; margin: 0 auto; padding: 48px 16px 80px; }
+  h1 { font-size: 24px; margin: 0 0 8px; }
+  h2 { font-size: 17px; margin: 32px 0 8px; }
+  p, li { margin: 0 0 8px; }
+  .meta { opacity: .7; font-size: 13px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>개인정보처리방침</h1>
+  <p class="meta">Catch The Jebi (https://catch-jebi.vercel.app) · 시행일 2026년 11월 5일</p>
+
+  <h2>1. 수집하는 정보</h2>
+  <ul>
+    <li><b>플레이 기록</b>: 레벨, 클리어 시간, 헛손질 횟수, 꽝 횟수, 탭 로그, 브라우저에서 생성한 기기 식별자(무작위 UUID). 리더보드 집계와 부정 기록 걸러내기에 씁니다.</li>
+    <li><b>닉네임</b>: 랭킹에 올리기 위해 직접 입력한 이름.</li>
+    <li><b>소셜 로그인 정보</b>: 카카오 또는 Google 로그인 시 해당 서비스가 제공하는 식별자, 닉네임(이름), 프로필 사진. 이메일은 Google 로그인에서만 받으며 계정 식별에만 씁니다. 로그인은 선택이며, 기록을 계정에 묶어 두기 위해서만 쓰입니다.</li>
+    <li><b>이용 통계</b>: Umami를 통해 페이지 조회, 플레이 시작·종료, 공유 클릭 같은 이벤트를 수집합니다. 쿠키를 쓰지 않으며 IP 주소는 저장하지 않습니다.</li>
+  </ul>
+
+  <h2>2. 이용 목적</h2>
+  <ul>
+    <li>리더보드와 명예의 전당 표시, 도전장 공유</li>
+    <li>서비스 안정성 확인과 개선</li>
+  </ul>
+
+  <h2>3. 보관과 삭제</h2>
+  <p>플레이 기록과 닉네임은 리더보드 운영 기간 동안 보관합니다. 로그인 계정과 연결된 기록은 아래 연락처로 요청하면 지웁니다. 브라우저에 저장된 진행도(localStorage)는 브라우저 데이터 삭제로 언제든 지울 수 있습니다.</p>
+
+  <h2>4. 제3자 제공과 처리 위탁</h2>
+  <p>개인정보를 제3자에게 판매하거나 제공하지 않습니다. 저장과 처리는 다음 서비스에 위탁합니다.</p>
+  <ul>
+    <li>Supabase (데이터베이스, 인증)</li>
+    <li>Vercel (호스팅)</li>
+    <li>Umami (이용 통계)</li>
+    <li>Kakao, Google (소셜 로그인, 공유)</li>
+  </ul>
+
+  <h2>5. 문의</h2>
+  <p>개인정보 관련 문의와 삭제 요청: <a href="mailto:juns0720720@gmail.com">juns0720720@gmail.com</a></p>
+</main>
+</body>
+</html>

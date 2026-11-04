@@ -1,5 +1,13 @@
 project_id = "catch-jebi"
 
+# `supabase config push`는 여기 선언된 항목만 원격에 반영하고 나머지(study-note의 site_url 등)는 건드리지 않는다.
+# Google 로그인은 GIS id_token → signInWithIdToken 흐름이라 client_id(aud 검증)만 있으면 된다.
+[auth.external.google]
+enabled = true
+client_id = "41548416318-ont7p8ioggqkjakpa6b3jgfn2lprq7mu.apps.googleusercontent.com"
+secret = ""
+skip_nonce_check = false
+
 [functions.jebi-submit-run]
 # 자체 검증을 하므로 JWT 검증은 끈다 (anon 호출 허용, 새 API 키 형식과도 호환).
 verify_jwt = false
