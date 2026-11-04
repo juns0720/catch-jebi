@@ -9,7 +9,7 @@
 | GitHub | https://github.com/juns0720/catch-jebi (main) |
 | Vercel | 프로젝트 `catch-jebi`, GitHub 연결됨, 프로덕션 https://catch-jebi.vercel.app |
 | `/api/og`, `/c` | 배포됨. OG 이미지 콜드 3초, 캐시 후 50ms |
-| Kakao Developers | 앱 "Catch The Jebi" 생성됨 (앱 ID 1637686) |
+| Kakao Developers | 앱 "Catch The Jebi" (앱 ID 1637686). JS SDK 도메인·리다이렉트 URI 등록됨, 카카오 로그인 ON, 동의항목(닉네임·프로필 사진 필수) 설정됨. 프로덕션에서 카카오톡 공유 친구 선택 화면 확인됨 (2026-11-05) |
 | Supabase | 기존 `study-note` 프로젝트 공유 (ref `qgalikbkzqnzzwceqdpt`). `jebi_` 테이블·뷰·RPC 적용됨, Edge Function `jebi-submit-run` 배포됨, 제출→리더보드 확인됨 |
 | Umami | 웹사이트 "Catch The Jebi" 등록됨. Website ID는 Vercel 환경변수에 설정됨 |
 
@@ -18,7 +18,7 @@
 | 키 | 값 | 상태 |
 |---|---|---|
 | `VITE_SITE_URL` | https://catch-jebi.vercel.app | 설정됨 |
-| `VITE_KAKAO_JS_KEY` | Kakao 플랫폼 키 > JavaScript 키 | **직접 입력 필요** |
+| `VITE_KAKAO_JS_KEY` | Kakao 플랫폼 키 > JavaScript 키 (공개용 클라이언트 키) | 설정됨 (`--type config`, 2026-11-05) |
 | `VITE_SUPABASE_URL` | https://qgalikbkzqnzzwceqdpt.supabase.co | 설정됨 |
 | `VITE_SUPABASE_ANON_KEY` | Supabase anon public (공개용 키) | 설정됨 (`--type config`) |
 | `VITE_UMAMI_WEBSITE_ID` | Umami > Websites > Website ID | 설정됨 |
@@ -41,20 +41,21 @@ npx supabase db query --remote --yes -f supabase/migrations/0001_init.sql
 npx supabase functions deploy jebi-submit-run --no-verify-jwt --yes
 ```
 
-남은 것 (카카오 로그인용):
-1. Authentication → Providers → Kakao: 켜고 Kakao REST API 키와 Client Secret 입력. 여기 표시되는 Callback URL을 복사해 Kakao JavaScript 키 수정 화면의 "카카오 로그인 리다이렉트 URI"에 넣는다.
-2. Authentication → URL Configuration: Site URL은 study-note 것을 건드리지 말고, Redirect URLs에 `https://catch-jebi.vercel.app/challenge/**`, `http://localhost:5173/challenge/**`만 추가.
+완료된 것 (2026-11-05): Authentication → URL Configuration의 Redirect URLs에 `https://catch-jebi.vercel.app/challenge/**`, `http://localhost:5173/challenge/**` 추가됨 (Site URL은 study-note 것 그대로).
+
+남은 것 (카카오 로그인용, 비밀 키 입력이라 사용자가 직접):
+1. Kakao 콘솔 앱 설정 → 보안(어드민 키/보안)에서 Client Secret 생성, 코드 활성화 ON.
+2. Supabase Authentication → Providers → Kakao: "Kakao enabled" ON, REST API Key(Kakao 플랫폼 키 페이지)와 Client Secret Code 입력, Save. Callback URL `https://qgalikbkzqnzzwceqdpt.supabase.co/auth/v1/callback`은 이미 Kakao 리다이렉트 URI에 등록돼 있다.
 
 ### 2. Kakao Developers (앱 1637686, 새 콘솔 기준)
-새 콘솔은 플랫폼/도메인 설정이 "플랫폼 키" 페이지의 키 카드 안으로 들어갔다.
-1. 앱 설정 → 플랫폼 키 → JavaScript 키 카드 → 더보기(⋯) → 수정:
-   - 키 이름: `web`
-   - JavaScript SDK 도메인: `https://catch-jebi.vercel.app`, `http://localhost:5173`
-   - 카카오 로그인 리다이렉트 URI: Supabase Callback URL (Supabase 생성 후)
-   - 저장. 그 JavaScript 키 값을 Vercel `VITE_KAKAO_JS_KEY`에.
-2. 제품 설정 → 카카오 로그인: 활성화 ON, 동의항목 닉네임·프로필 사진 필수.
-3. 앱 설정 → 어드민 키/보안에서 Client Secret 생성, 코드 활성화 ON. REST API 키(플랫폼 키 페이지)와 함께 Supabase Kakao provider에 입력.
-4. 공유 카드 미리보기가 안 바뀌면 https://developers.kakao.com/tool/debugger/sharing 에서 캐시 초기화.
+완료된 것 (2026-11-05):
+- 플랫폼 키 → JavaScript 키 카드(⋯ → 수정): JS SDK 도메인 `https://catch-jebi.vercel.app`, `http://localhost:5173`, 카카오 로그인 리다이렉트 URI `https://qgalikbkzqnzzwceqdpt.supabase.co/auth/v1/callback`.
+  - 리다이렉트 URI 입력란은 값을 치고 Enter를 눌러야 반영된다. 저장 버튼만 누르면 빈 값으로 저장됨.
+- 제품 설정 → 카카오 로그인 → 일반: 상태 ON. 동의항목: 닉네임·프로필 사진 필수 동의.
+- JavaScript 키는 Vercel `VITE_KAKAO_JS_KEY`에 넣고 재배포함.
+
+남은 것: 위 Supabase 절의 Client Secret 생성·입력.
+공유 카드 미리보기가 안 바뀌면 https://developers.kakao.com/tool/debugger/sharing 에서 캐시 초기화.
 
 ### 3. Umami
 완료. 대시보드: https://cloud.umami.is/analytics/us/websites/335a580c-6920-44f2-866d-b60df1f3b88d
