@@ -11,7 +11,7 @@
 | `/api/og`, `/c` | 배포됨. OG 이미지 콜드 3초, 캐시 후 50ms |
 | Kakao Developers | 앱 "Catch The Jebi" 생성됨 (앱 ID 1637686) |
 | Supabase | **미생성**. 조직의 무료 프로젝트 한도(2개) 초과 |
-| Umami | 미등록 |
+| Umami | 웹사이트 "Catch The Jebi" 등록됨. Website ID는 Vercel 환경변수에 설정됨 |
 
 ## 환경변수 (Vercel)
 
@@ -21,8 +21,8 @@
 | `VITE_KAKAO_JS_KEY` | Kakao 플랫폼 키 > JavaScript 키 | **직접 입력 필요** |
 | `VITE_SUPABASE_URL` | Supabase > Settings > API > Project URL | Supabase 생성 후 |
 | `VITE_SUPABASE_ANON_KEY` | Supabase > Settings > API > anon public | Supabase 생성 후 |
-| `VITE_UMAMI_WEBSITE_ID` | Umami > Websites > Website ID | Umami 등록 후 |
-| `VITE_UMAMI_SCRIPT_URL` | https://cloud.umami.is/script.js | Umami 등록 후 |
+| `VITE_UMAMI_WEBSITE_ID` | Umami > Websites > Website ID | 설정됨 |
+| `VITE_UMAMI_SCRIPT_URL` | https://cloud.umami.is/script.js | 설정됨 |
 
 키는 Vercel 대시보드 Settings → Environment Variables에서 Production/Preview/Development 전부에 넣는다.
 로컬은 `vercel env pull .env.local`로 받는다. 키를 넣은 뒤에는 재배포가 필요하다 (`vercel --prod` 또는 push).
@@ -43,16 +43,19 @@
 6. Authentication → Providers → Kakao: 켜고 Kakao REST API 키와 Client Secret 입력. 여기 표시되는 Callback URL을 복사.
 7. Authentication → URL Configuration: Site URL `https://catch-jebi.vercel.app`, Redirect URLs에 `https://catch-jebi.vercel.app/challenge/**`, `http://localhost:5173/challenge/**`.
 
-### 2. Kakao Developers (앱 1637686)
-1. 플랫폼 키 → JavaScript 키를 Vercel `VITE_KAKAO_JS_KEY`에.
-2. Web 플랫폼(사이트 도메인) 등록: `https://catch-jebi.vercel.app`, `http://localhost:5173`.
-3. 제품 설정 → 카카오 로그인: 활성화 ON, Redirect URI에 Supabase Callback URL 추가, 동의항목 닉네임·프로필 사진 필수.
-4. 보안 → Client Secret 생성, 코드 활성화 ON. REST API 키와 함께 Supabase Kakao provider에 입력.
-5. 공유 카드 미리보기가 안 바뀌면 https://developers.kakao.com/tool/debugger/sharing 에서 캐시 초기화.
+### 2. Kakao Developers (앱 1637686, 새 콘솔 기준)
+새 콘솔은 플랫폼/도메인 설정이 "플랫폼 키" 페이지의 키 카드 안으로 들어갔다.
+1. 앱 설정 → 플랫폼 키 → JavaScript 키 카드 → 더보기(⋯) → 수정:
+   - 키 이름: `web`
+   - JavaScript SDK 도메인: `https://catch-jebi.vercel.app`, `http://localhost:5173`
+   - 카카오 로그인 리다이렉트 URI: Supabase Callback URL (Supabase 생성 후)
+   - 저장. 그 JavaScript 키 값을 Vercel `VITE_KAKAO_JS_KEY`에.
+2. 제품 설정 → 카카오 로그인: 활성화 ON, 동의항목 닉네임·프로필 사진 필수.
+3. 앱 설정 → 어드민 키/보안에서 Client Secret 생성, 코드 활성화 ON. REST API 키(플랫폼 키 페이지)와 함께 Supabase Kakao provider에 입력.
+4. 공유 카드 미리보기가 안 바뀌면 https://developers.kakao.com/tool/debugger/sharing 에서 캐시 초기화.
 
 ### 3. Umami
-1. https://cloud.umami.is → Websites → Add website: 이름 Catch The Jebi, 도메인 `catch-jebi.vercel.app`.
-2. Website ID를 Vercel `VITE_UMAMI_WEBSITE_ID`에.
+완료. 대시보드: https://cloud.umami.is/analytics/us/websites/335a580c-6920-44f2-866d-b60df1f3b88d
 
 ## 확인된 것 (2026-11-04)
 
