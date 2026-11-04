@@ -9,7 +9,6 @@ export interface HomeDeps {
   getProgress(): Progress;
   onStart(level: number): void;
   onToggleMute(): void;
-  onLogin(): void;
   onLogout(): void;
   /** 컨테이너에 Google 로그인 버튼을 그린다 (설정이 없으면 비워 둔다) */
   mountGoogle(el: HTMLElement): void;
@@ -26,8 +25,6 @@ export interface Home {
   select(level: number): void;
   selected(): number;
   setSession(nick: string | null): void;
-  /** 카카오 로그인이 설정돼 있지 않으면 버튼을 숨긴다 */
-  setLoginAvailable(on: boolean): void;
   setMuted(m: boolean): void;
 }
 
@@ -35,7 +32,6 @@ export function createHome(root: HTMLElement, deps: HomeDeps): Home {
   let tab: HomeTab = 'play';
   let sel = Math.min(MAX_LEVEL, Math.max(1, deps.getProgress().unlocked));
   let sessionNick: string | null = null;
-  let loginAvailable = true;
   const rank = createRankPanel(sel);
 
   const el = h('div', { class: 'home', hidden: true });
@@ -55,9 +51,7 @@ export function createHome(root: HTMLElement, deps: HomeDeps): Home {
         h('button', { class: 'btn ghost', type: 'button', onclick: () => deps.onLogout() }, '로그아웃'));
     } else {
       const google = h('div', { class: 'home-google', 'aria-label': 'Google 로그인' });
-      account = h('div', { class: 'home-account' },
-        loginAvailable ? h('button', { class: 'btn ghost', type: 'button', onclick: () => deps.onLogin() }, '카카오 로그인') : h('span', {}),
-        google);
+      account = h('div', { class: 'home-account' }, google);
       deps.mountGoogle(google);
     }
     top.replaceChildren(
@@ -146,7 +140,6 @@ export function createHome(root: HTMLElement, deps: HomeDeps): Home {
     },
     selected: () => sel,
     setSession(nick) { sessionNick = nick; if (!el.hidden) renderTop(); },
-    setLoginAvailable(on) { loginAvailable = on; if (!el.hidden) renderTop(); },
     setMuted(m) { setMuteIcon(muteBtn, m); },
   };
 }

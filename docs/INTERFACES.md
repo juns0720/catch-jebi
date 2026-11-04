@@ -125,7 +125,8 @@ export async function submitRun(r: RunResult, nickname: string | null, deviceId:
 export async function setNickname(runId: string, deviceId: string, nickname: string): Promise<{ ok: boolean; error?: string }>; // 욕설이면 error 메시지
 export async function fetchLeaderboard(level: number | 'overall', limit?: number): Promise<LeaderboardRow[]>;
 export async function fetchHallOfFame(): Promise<HallOfFameRow[]>;
-export async function signInWithKakao(redirectTo: string): Promise<void>;
+// 로그인은 Google만 (src/data/google.ts: GIS 버튼 → signInWithGoogleIdToken). 카카오 로그인은 2026-11-05에 뺐다.
+export async function signInWithGoogleIdToken(token: string, nonce: string): Promise<'ok' | 'error'>;
 export async function getSessionNickname(): Promise<string | null>;  // 로그인 유저면 kakao 닉네임
 export async function signOut(): Promise<void>;
 ```

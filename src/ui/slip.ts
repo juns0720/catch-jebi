@@ -11,8 +11,8 @@ export interface SlipOpts {
   loginPrompt?: LoginPrompt | null;
   actions: SlipActions; hasNext: boolean;
 }
-/** kakao=false 면 카카오 버튼을 안 그린다. google 이 있으면 그 컨테이너에 Google 버튼을 그려 달라고 부른다 */
-export interface LoginPrompt { onClick(): void; kakao?: boolean; google?: (el: HTMLElement) => void }
+/** google 은 넘겨준 컨테이너에 Google 로그인 버튼을 그린다 (설정이 없으면 비워 둔다) */
+export interface LoginPrompt { google: (el: HTMLElement) => void }
 export interface SlipPrompts {
   nicknamePrompt?: { onSubmit(n: string): Promise<string | null> } | null;
   loginPrompt?: LoginPrompt | null;
@@ -54,7 +54,9 @@ const CSS = `
 .rs-err:empty { display: none; }
 .rs-ok { margin: 0; text-align: center; font-size: 14px; color: var(--muted); }
 .rs-login { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 10px; }
+.rs-login-hint { margin: 0; font-size: 13px; color: var(--muted); }
 .rs-google:empty { display: none; }
+.rs-google:empty + .rs-login-hint, .rs-login:has(.rs-google:empty) { display: none; }
 .rs-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 .rs-actions .btn { width: 100%; }
 .rs-actions .wide { grid-column: 1 / -1; }
@@ -206,14 +208,10 @@ export function showResultSlip(root: HTMLElement, o: SlipOpts): SlipHandle {
 
   const renderLogin = (lp: NonNullable<SlipPrompts['loginPrompt']>) => {
     loginShown = true;
-    const row = h('div', { class: 'rs-login' });
-    if (lp.kakao !== false) row.append(h('button', { class: 'btn ghost', type: 'button', onclick: () => lp.onClick() }, '카카오 로그인하고 기록 지키기'));
-    if (lp.google) {
-      const g = h('div', { class: 'rs-google', 'aria-label': 'Google 로그인' });
-      row.append(g);
-      lp.google(g);
-    }
-    if (row.childElementCount) prompts.append(row);
+    const g = h('div', { class: 'rs-google', 'aria-label': 'Google 로그인' });
+    const row = h('div', { class: 'rs-login' }, h('p', { class: 'rs-login-hint' }, '로그인하면 이 기록이 계정에 남아요'), g);
+    lp.google(g);
+    prompts.append(row);
   };
 
   const setPrompts = (p: SlipPrompts) => {
