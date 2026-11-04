@@ -12,6 +12,8 @@ export interface HomeDeps {
   onLogout(): void;
   /** 컨테이너에 Google 로그인 버튼을 그린다 (설정이 없으면 비워 둔다) */
   mountGoogle(el: HTMLElement): void;
+  /** 탭이 바뀔 때 (URL 에 ?tab= 을 반영하기 위해) */
+  onTab?(tab: HomeTab): void;
 }
 
 export type HomeTab = 'play' | 'rank';
@@ -74,7 +76,7 @@ export function createHome(root: HTMLElement, deps: HomeDeps): Home {
     const best = p.best[sel];
 
     const badge = h('div', { class: 'home-badge', 'aria-hidden': 'true' });
-    badge.innerHTML = badgeSvg(tier.id, 72);
+    badge.innerHTML = badgeSvg(tier.id, 120);
 
     const grid = h('div', { class: 'lv-grid', role: 'group', 'aria-label': '레벨 선택' });
     for (let l = 1; l <= MAX_LEVEL; l++) {
@@ -94,18 +96,19 @@ export function createHome(root: HTMLElement, deps: HomeDeps): Home {
       hall.classList.toggle('zero', rows.length === 0);
     });
 
+    // 좌측 축: 배지가 히어로, 이름·상태·시작 버튼이 그 옆에 왼쪽 정렬로 붙는다
     return h('div', { class: 'home-play' },
       h('div', { class: 'home-tier' }, badge,
-        h('div', null,
+        h('div', { class: 'home-tier-body' },
+          h('p', { class: 'home-tier-kicker' }, cleared ? `최고 클리어 레벨 ${cleared}` : '아직 클리어한 레벨이 없어요'),
           h('p', { class: 'home-tier-name' }, tier.name),
-          h('p', { class: 'home-meta' }, cleared ? `최고 클리어 레벨 ${cleared}` : '아직 클리어한 레벨이 없어요'))),
-      h('button', { class: 'btn primary home-start', type: 'button', onclick: () => deps.onStart(sel) }, `레벨 ${sel} 시작`),
-      h('p', { class: 'home-meta' },
-        `기준 시간 ${fmtSec(def.parMs)}초 · 제비 ${def.birds}마리`,
-        best ? ` · 내 최고 ${fmtSec(best)}초` : ' · 아직 기록이 없어요'),
+          h('button', { class: 'btn primary home-start', type: 'button', onclick: () => deps.onStart(sel) }, `레벨 ${sel} 시작`),
+          h('p', { class: 'home-meta' },
+            `기준 시간 ${fmtSec(def.parMs)}초, 제비 ${def.birds}마리`,
+            best ? `, 내 최고 ${fmtSec(best)}초` : ''))),
       grid,
       hall,
-      h('p', { class: 'home-rule' }, '쪽지를 문 제비 중 당첨 한 마리만 잡으면 돼요. 당첨 제비는 더 빠르고 예민하게 굴어요. 꽝을 잡으면 1초 동안 손이 묶이고, 기준 시간을 넘기면 제비들이 강남으로 돌아가요.'),
+      h('p', { class: 'home-rule' }, '쪽지를 문 제비 중 당첨 한 마리만 잡으면 돼요. 당첨 제비는 더 빠르고 예민하게 굴어요. 꽝을 잡으면 1초 동안 손이 묶이고, 기준 시간을 넘기면 제비들이 강남으로 돌아가요. 마우스 전용이에요.'),
     );
   }
 
@@ -116,13 +119,14 @@ export function createHome(root: HTMLElement, deps: HomeDeps): Home {
     card.replaceChildren(
       h('header', { class: 'home-head' },
         h('h1', null, 'Catch The Jebi'),
-        h('p', null, '제비 잡기')),
+        h('p', null, '당첨 제비 한 마리를 기준 시간 안에')),
       tabs,
       tab === 'play' ? renderPlay(p) : rank.el,
     );
   }
 
   function show(t: HomeTab = tab) {
+    if (t !== tab) deps.onTab?.(t);
     tab = t;
     el.hidden = false;
     if (tab === 'rank') rank.setLevel(sel);

@@ -6,7 +6,7 @@ body { height: 100%; }
 .app {
   height: 100%;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 340px;
+  grid-template-columns: minmax(0, 1fr) clamp(320px, 28vw, 420px);
   gap: 16px;
   padding-block: 16px;
   padding-left: max(16px, env(safe-area-inset-left, 0px));
@@ -32,7 +32,7 @@ body { height: 100%; }
 a.btn { text-decoration: none; display: inline-block; text-align: center; }
 a.btn[hidden] { display: none; }
 
-.panel { min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 22px; padding-block: 4px 8px; }
+.panel { min-height: 0; overflow-y: auto; overscroll-behavior: contain; display: flex; flex-direction: column; gap: 22px; padding-block: 4px 8px; }
 .lede { margin: 0; color: var(--muted); line-height: 1.75; max-width: 65ch; }
 .group { display: grid; gap: 8px; }
 .label { font-size: 13px; letter-spacing: .04em; color: var(--fg); }
@@ -49,9 +49,9 @@ textarea:focus-visible, .chip:focus-visible { outline: 2px solid var(--accent); 
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .chip {
   font: inherit; font-size: 13px; color: var(--fg); background: var(--surface);
-  border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; cursor: pointer;
+  border: 1px solid var(--line); border-radius: 999px; padding: 8px 12px; min-height: 36px; cursor: pointer;
 }
-.chip:hover { border-color: var(--accent); }
+@media (hover: hover) { .chip:hover { border-color: var(--accent); } }
 
 .seg { display: grid; grid-template-columns: repeat(4, 1fr); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--surface); }
 .seg input { position: absolute; opacity: 0; pointer-events: none; }

@@ -1,4 +1,17 @@
 /* 디자인 토큰. 원본 아티팩트에서 가져옴. 모든 페이지가 이 파일을 쓴다. */
+
+/* 제목·숫자·도장 등 고정 문구용 송명체 서브셋(17KB). HTML 에서 preload 되고, 이 범위 밖 글자(닉네임 등)는
+ * Google Fonts 의 송명체 슬라이스가 맡는다. 같은 family 이름이라 범위가 겹치는 글자는 나중에 선언된 이 쪽이 이긴다.
+ * 다시 만들 때: fonttools 로 public/fonts/SongMyung-Regular.ttf 를 고정 문구로 subset (docs/DESIGN-AUDIT.md §6). */
+@font-face {
+  font-family: "Song Myung";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/song-myung-ui.woff2") format("woff2");
+  unicode-range: U+0021, U+0025, U+0027-0029, U+002C-003A, U+003F, U+0043, U+004A, U+004C, U+0050, U+0054, U+0061-0063, U+0065, U+0068-0069, U+0074, U+0076, U+2019, U+201C-201D, U+AC04, U+AC10, U+AC14-AC15, U+AC8C, U+ACA9, U+ACBC, U+ACE0, U+AE30, U+AF5D, U+B07C, U+B0A0, U+B0A8, U+B0B4, U+B118, U+B124, U+B180, U+B208, U+B294, U+B2E4, U+B2F9, U+B3C4, U+B3CC, U+B3D9, U+B465, U+B4A4, U+B4DC, U+B4E4, U+B625, U+B7AD, U+B808, U+B824, U+B85C-B85D, U+B960, U+B9AC, U+B9B0, U+B9C8, U+B9D0, U+BA85, U+BC15, U+BC1B-BC1C, U+BC88, U+BCA8, U+BCF4, U+BD80, U+BE44, U+BF51, U+C0B4, U+C0C1, U+C0C8, U+C11C, U+C131, U+C138, U+C190, U+C21C, U+C2DC, U+C2E0, U+C318, U+C528, U+C544, U+C5B4, U+C5D0, U+C5F4, U+C608, U+C694, U+C6A9, U+C704, U+C73C, U+C740, U+C744, U+C74C, U+C758, U+C774, U+C788, U+C791, U+C7A1, U+C7A5, U+C804, U+C815, U+C81C, U+C84C, U+C8FC, U+C900, U+C911, U+C9C0, U+C9C8, U+C9F8, U+CABD, U+CC4C, U+CCA8, U+CD08, U+CD5C, U+CF54, U+D0B9, U+D1B5, U+D3EC, U+D3F0, U+D50C, U+D558, U+D55C, U+D589, U+D5DB, U+D648, U+D765;
+}
+
 :root {
   --bg: #e9eee8; --surface: #f8f8f3; --fg: #1b2230; --muted: #5b6876; --line: #cdd5d6;
   --accent: #1e3352; --accent-fg: #f6f2e8; --seal: #c0392b;
@@ -50,8 +63,10 @@ body { margin: 0; min-height: 100%; background: var(--bg); color: var(--fg); fon
 }
 .btn.primary { background: var(--accent); color: var(--accent-fg); border: 0; padding: 14px 16px; font-size: 16px; }
 .btn.ghost { background: var(--surface); color: var(--fg); border: 1px solid var(--line); border-radius: 999px; padding: 8px 14px; font-size: 14px; }
-.btn.ghost:hover { border-color: var(--accent); }
+@media (hover: hover) { .btn.ghost:hover { border-color: var(--accent); } }
 .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+/* 터치: 더블탭 확대 지연 제거, 기본 탭 하이라이트 대신 :active 스케일을 쓴다 */
+.btn, .chip, .lv-btn, .home-tab, .taunt-row, .seg label, .rank-select, textarea, input { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
 /* 누를 수 있는 모든 것은 눌린다. 칩·레벨·탭·라디오 행도 버튼과 같은 손맛 */
 .btn:active:not(:disabled), .chip:active, .lv-btn:active:not(:disabled), .home-tab:active, .taunt-row:active, .seg label:active { transform: scale(.97); }
 .chip, .lv-btn, .home-tab, .taunt-row { transition: transform var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out), background-color var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out); }

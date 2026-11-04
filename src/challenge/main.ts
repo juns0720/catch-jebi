@@ -89,6 +89,13 @@ function boot(): void {
     onToggleMute: toggleMute,
     onLogout: () => { googleSignedOut(); void signOut().finally(() => { sessionNick = null; home.setSession(null); }); },
     mountGoogle: (el) => { void mountGoogleButton(el, { size: 'medium' }); },
+    // 탭을 URL 에 남긴다 (?tab=rank 로 랭킹을 바로 열 수 있게). 도전장 쿼리는 그대로 둔다
+    onTab: (t) => {
+      const q = new URLSearchParams(location.search);
+      if (t === 'rank') q.set('tab', 'rank'); else q.delete('tab');
+      const s = q.toString();
+      history.replaceState(null, '', location.pathname + (s ? '?' + s : ''));
+    },
   });
   onGoogleLogin((r) => {
     if (r === 'ok') { track('login_success'); toast('Google 로그인 됐어요'); }
@@ -373,6 +380,6 @@ function boot(): void {
     showChallengeIntro(challenge);
   } else {
     mountGame(home.selected(), false);
-    home.show('play');
+    home.show(new URLSearchParams(location.search).get('tab') === 'rank' ? 'rank' : 'play');
   }
 }

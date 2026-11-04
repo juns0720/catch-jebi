@@ -132,6 +132,8 @@ Hallmark 6축 자기평가(1~5): Philosophy 4 · Hierarchy 3 · Execution 3 · S
 
 ## 6. 우선순위 수정 목록
 
+7~10번도 같은 날 적용했다: 홈 카드를 종이 재질(`--paper`, 쪽지 괘선, 하늘 톤 그림자)로 바꾸고 배지 120px·티어명 32px을 좌측 축으로 세웠다. 부제는 "당첨 제비 한 마리를 기준 시간 안에". 랭킹 탭은 `?tab=rank`로 열리고 URL에 남는다. hover 규칙은 `@media (hover: hover)` 안으로, pressable 전부 `touch-action: manipulation`, 스크롤 영역에 `overscroll-behavior: contain`, 랜딩 칩 36px, 랜딩 패널 폭 `clamp(320px, 28vw, 420px)`. 송명체는 고정 문구 143자만 담은 17KB woff2(`public/fonts/song-myung-ui.woff2`)를 `unicode-range`로 선언하고 preload한다. 나머지 글자는 Google Fonts 슬라이스가 그대로 맡는다. 서브셋 재생성은 fonttools: `pyftsubset SongMyung-Regular.ttf --text-file=… --flavor=woff2`.
+
 1~6번은 2026-11-05에 적용했다: `/api/og?site=1` 랜딩 카드, "뒤에서 N%" 분기, `--ease-out`·`--dur-*` 토큰과 전 pressable `:active scale(.97)`, 타이머 바 `scaleX`, 세 페이지 `theme-color`, 종이 위 붉은색 `--seal-ink`(다크 #b8362b). 토스트 진입/퇴장 비대칭과 쪽지 도장 타이밍(0.75s)도 함께.
 
 | # | 수정 | 근거 | 예상 |

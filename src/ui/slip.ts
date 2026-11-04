@@ -28,7 +28,7 @@ const NICK_RE = /^[가-힣ㄱ-ㅎㅏ-ㅣA-Za-z0-9 ]{2,10}$/;
 const ARM_DELAY_MS = 700; // 결과가 뜨는 순간 연타하던 클릭이 버튼에 꽂히는 것을 막는다
 
 const CSS = `
-.rs-veil { position: fixed; inset: 0; z-index: 60; display: grid; padding: 16px; overflow-y: auto; background: var(--veil); }
+.rs-veil { position: fixed; inset: 0; z-index: 60; display: grid; padding: 16px; overflow-y: auto; overscroll-behavior: contain; background: var(--veil); }
 .rs-sheet { width: min(480px, 100%); margin: auto; display: grid; gap: 14px; padding: 16px; background: var(--surface); color: var(--fg); border: 1px solid var(--line); border-radius: 18px; font-family: var(--font-body); }
 .rs-slip { padding: 26px 18px 20px; }
 .rs-body { width: 100%; display: grid; gap: 10px; justify-items: center; text-align: center; }
