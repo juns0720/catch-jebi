@@ -1,0 +1,87 @@
+/* 제비뽑기 페이지 고유 스타일. 토큰/.btn/.slip/.stamp 기본 규칙은 src/styles/tokens.css */
+/* Layout: 하늘(캔버스)이 주인공, 오른쪽(모바일은 아래) 패널에 쪽지 설정과 뽑은 결과 */
+html { height: 100%; }
+body { height: 100%; }
+
+.app {
+  height: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 16px;
+  padding-block: 16px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+
+.stage {
+  position: relative; min-height: 0; border-radius: 18px; overflow: hidden;
+  background: var(--sky-bot); border: 1px solid var(--line);
+}
+.stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: crosshair; }
+.stage-head {
+  position: absolute; inset: 0 0 auto; display: flex; flex-wrap: wrap; gap: 12px;
+  justify-content: space-between; align-items: flex-start; padding: 18px 20px; pointer-events: none;
+}
+.stage-head h1 {
+  margin: 0; font-family: var(--font-display); font-weight: 400; line-height: 1.15;
+  font-size: clamp(24px, 3.2vw, 36px); text-wrap: balance; letter-spacing: -.01em;
+}
+.stage-head p { margin: 4px 0 0; color: var(--muted); font-size: 14px; font-variant-numeric: tabular-nums; }
+.stage-head .btn { pointer-events: auto; }
+.head-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
+a.btn { text-decoration: none; display: inline-block; text-align: center; }
+a.btn[hidden] { display: none; }
+
+.panel { min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 22px; padding-block: 4px 8px; }
+.lede { margin: 0; color: var(--muted); line-height: 1.75; max-width: 65ch; }
+.group { display: grid; gap: 8px; }
+.label { font-size: 13px; letter-spacing: .04em; color: var(--fg); }
+.help { margin: 0; font-size: 13px; color: var(--muted); line-height: 1.6; }
+.row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.num { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 13px; }
+
+textarea {
+  width: 100%; resize: vertical; min-height: 150px; font: inherit; line-height: 1.65; color: var(--fg);
+  background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px;
+}
+textarea:focus-visible, .chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip {
+  font: inherit; font-size: 13px; color: var(--fg); background: var(--surface);
+  border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; cursor: pointer;
+}
+.chip:hover { border-color: var(--accent); }
+
+.seg { display: grid; grid-template-columns: repeat(4, 1fr); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--surface); }
+.seg input { position: absolute; opacity: 0; pointer-events: none; }
+.seg label { padding: 10px 6px; text-align: center; font-size: 14px; cursor: pointer; color: var(--fg); transition: background .15s, color .15s; }
+.seg label + input + label { border-left: 1px solid var(--line); }
+.seg input:checked + label { background: var(--accent); color: var(--accent-fg); }
+.seg input:focus-visible + label { outline: 2px solid var(--accent); outline-offset: -4px; }
+
+.btn.primary { width: 100%; }
+.cta { margin-top: 10px; }
+
+.results { list-style: none; margin: 0; padding: 0; }
+.results li { display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 8px; padding: 9px 0; border-bottom: 1px solid var(--line); align-items: baseline; }
+.results li.empty { display: block; color: var(--muted); font-size: 14px; border-bottom: 0; line-height: 1.6; }
+.results .n { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 13px; }
+.results .t { font-family: var(--font-display); font-size: 18px; overflow-wrap: anywhere; }
+.results li.win .t { color: var(--seal); }
+
+.veil {
+  position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; background: var(--veil);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.sheet { width: min(420px, 100%); background: var(--surface); color: var(--fg); border-radius: 18px; padding: 22px; display: grid; gap: 18px; text-align: center; border: 1px solid var(--line); }
+.order { margin: 0; color: var(--muted); font-size: 14px; font-variant-numeric: tabular-nums; }
+.slip-text { font-family: var(--font-display); font-size: clamp(30px, 8vw, 48px); line-height: 1.25; overflow-wrap: anywhere; text-wrap: balance; }
+.slip .stamp { position: absolute; right: 18px; bottom: 16px; }
+
+@media (max-width: 860px) {
+  html, body { height: auto; }
+  .app { height: auto; grid-template-columns: minmax(0, 1fr); }
+  .stage { height: 64vh; min-height: 380px; }
+  .panel { overflow: visible; }
+}

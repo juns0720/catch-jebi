@@ -1,0 +1,5 @@
+project_id = "catch-jebi"
+
+[functions.submit-run]
+# 자체 검증을 하므로 JWT 검증은 끈다 (anon 호출 허용, 새 API 키 형식과도 호환).
+verify_jwt = false

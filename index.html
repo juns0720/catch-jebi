@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Catch The Jebi · 살아있는 제비뽑기</title>
+<meta name="description" content="강남 갔던 제비들이 쪽지를 물고 돌아왔어요. 날아다니는 제비를 잡아 쪽지를 뽑아 보세요.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Catch The Jebi · 살아있는 제비뽑기">
+<meta property="og:description" content="강남 갔던 제비들이 쪽지를 물고 돌아왔어요">
+<meta property="og:image" content="/og-default.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Song+Myung&display=swap" rel="stylesheet">
+</head>
+<body>
+<main class="app">
+  <section class="stage" id="stage" aria-label="제비들이 날아다니는 하늘">
+    <canvas id="sky" role="img" aria-label="쪽지를 문 제비들이 날아다니는 하늘. 제비를 누르면 잡혀요."></canvas>
+    <div class="stage-head">
+      <div>
+        <h1>살아있는 제비뽑기</h1>
+        <p id="flyCount" aria-live="polite">날고 있는 제비 6마리</p>
+      </div>
+      <div class="head-actions">
+        <button class="btn ghost" id="grab" type="button">눈 감고 한 마리 잡기</button>
+        <a class="btn ghost" id="menuChallenge" href="/challenge/?from=menu">제비 잡기 챌린지 →</a>
+      </div>
+    </div>
+  </section>
+
+  <aside class="panel">
+    <p class="lede">강남 갔던 제비들이 쪽지를 하나씩 물고 돌아왔어요. 날아다니는 제비를 눌러 잡으면 물고 있던 쪽지를 펼쳐 볼 수 있어요.</p>
+
+    <div class="group">
+      <label class="label" for="items">쪽지 내용</label>
+      <p class="help">한 줄에 쪽지 하나씩 적어요. 제비 한 마리가 쪽지 하나를 물고 날아가요.</p>
+      <textarea id="items" spellcheck="false">당첨
+꽝
+꽝
+꽝
+꽝
+꽝</textarea>
+      <p class="help" id="itemsNote">제비 6마리</p>
+      <div class="chips" aria-label="빠른 채우기">
+        <button class="chip" type="button" data-preset="win">당첨 1 · 꽝 5</button>
+        <button class="chip" type="button" data-preset="order">순서 정하기</button>
+        <button class="chip" type="button" data-preset="chores">오늘의 당번</button>
+        <button class="chip" type="button" data-preset="lunch">점심 메뉴</button>
+      </div>
+    </div>
+
+    <div class="group">
+      <span class="label" id="modeLabel">제비 성격</span>
+      <div class="seg" role="radiogroup" aria-labelledby="modeLabel">
+        <input type="radio" name="mode" id="m-calm" value="calm"><label for="m-calm">순둥이</label>
+        <input type="radio" name="mode" id="m-normal" value="normal"><label for="m-normal">보통</label>
+        <input type="radio" name="mode" id="m-fast" value="fast"><label for="m-fast">날쌘돌이</label>
+        <input type="radio" name="mode" id="m-hard" value="hard" checked><label for="m-hard">하드코어</label>
+      </div>
+      <p class="help" id="modeHint"></p>
+    </div>
+
+    <button class="btn primary" id="release" type="button">제비 날려 보내기</button>
+
+    <div class="group">
+      <div class="row"><span class="label">뽑은 쪽지</span><span class="num" id="caughtCount">0 / 6</span></div>
+      <ol class="results" id="results"></ol>
+      <a class="btn primary cta" id="ctaChallenge" href="/challenge/?from=cta" hidden>손 속도 꽤 되시네요. 챌린지 해보실래요?</a>
+    </div>
+  </aside>
+</main>
+
+<div class="veil" id="veil" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="slipOrder" aria-describedby="slipText">
+    <p class="order" id="slipOrder">1번째로 잡은 제비</p>
+    <div class="slip" id="slip">
+      <span class="slip-text" id="slipText"></span>
+      <span class="stamp" id="stamp" hidden>당첨</span>
+    </div>
+    <button class="btn primary" id="closeSlip" type="button">다음 제비 잡으러 가기</button>
+  </div>
+</div>
+
+<script type="module" src="/src/lottery/main.ts"></script>
+</body>
+</html>

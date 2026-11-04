@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Catch The Jebi · 제비 잡기 챌린지</title>
+<meta name="description" content="날아다니는 제비 중 당첨 쪽지를 문 한 마리를 기준 시간 안에 잡으세요. 레벨 15개, 마우스 전용.">
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Song+Myung&display=swap" rel="stylesheet">
+<script>
+  // 마우스 없는 기기나 좁은 화면은 모바일 안내로 (모듈 로드 전에 먼저 보낸다)
+  if (!matchMedia('(pointer: fine)').matches || innerWidth < 900) location.replace('/m/' + location.search);
+</script>
+</head>
+<body class="challenge">
+<canvas id="sky" role="img" aria-label="쪽지를 문 제비들이 날아다니는 하늘. 제비를 눌러 잡아요."></canvas>
+<div id="app"></div>
+<noscript>이 게임은 자바스크립트가 필요해요.</noscript>
+<script type="module" src="/src/challenge/main.ts"></script>
+</body>
+</html>
